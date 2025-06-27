@@ -22,7 +22,7 @@ export function App() {
       <Route path="/signup" element={<Signup />} />
    
 
-     </Routes>
+     </Routes> 
      </BrowserRouter>
     </>
   )
