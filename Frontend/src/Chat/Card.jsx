@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const Card = () => {
+const ChatPage = () => {
   const [conversationId, setConversationId] = useState("default");
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -36,29 +36,32 @@ const Card = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white dark:bg-zinc-800 shadow-md rounded-lg overflow-hidden">
-      <div className="flex flex-col h-[400px]">
-        <div className="px-4 py-3 border-b dark:border-zinc-700">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-zinc-800 dark:text-white">Chatbot Assistant</h2>
-            <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">Online</div>
-          </div>
-        </div>
+    <div className="flex flex-col h-screen bg-zinc-100 dark:bg-zinc-900">
+      {/* Placeholder for Navbar */}
+      <header className="p-4 bg-white dark:bg-zinc-800 shadow-md">
+        <h1 className="text-xl font-bold text-zinc-800 dark:text-white">Navbar Placeholder</h1>
+      </header>
 
-        <div className="flex-1 p-3 overflow-y-auto flex flex-col space-y-2">
+      {/* Chat Section */}
+      <main className="flex-1 flex flex-col">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col space-y-2">
           {messages.map((msg, i) => (
             <div
               key={i}
-              className={`chat-message ${
-                msg.from === 'user' ? 'self-end bg-blue-500' : 'self-start bg-zinc-500'
-              } text-white max-w-xs rounded-lg px-3 py-1.5 text-sm`}
+              className={`max-w-xs rounded-lg px-3 py-1.5 text-sm text-white ${
+                msg.from === 'user'
+                  ? 'self-end bg-blue-500'
+                  : 'self-start bg-zinc-600'
+              }`}
             >
               {msg.text}
             </div>
           ))}
         </div>
 
-        <div className="px-3 py-2 border-t dark:border-zinc-700">
+        {/* Input */}
+        <div className="border-t dark:border-zinc-700 p-4">
           <div className="flex gap-2">
             <input
               placeholder="Type your message..."
@@ -69,15 +72,15 @@ const Card = () => {
             />
             <button
               onClick={handleSend}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg transition duration-300 ease-in-out text-sm"
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-lg transition duration-300 ease-in-out text-sm"
             >
               Send
             </button>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
 
-export default Card;
+export default ChatPage;

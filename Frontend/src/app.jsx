@@ -1,6 +1,9 @@
 import './app.css'
 import Landing from './LandingPage/Landing'
-import Card from './Chat/Card'
+import ChatPage from './Chat/Chatpage';
+import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
+
 
 
 export function App() {
@@ -8,8 +11,14 @@ export function App() {
 
   return (
     <>
-     <Landing/>
-    <Card/>
+    <BrowserRouter>
+     <Routes>
+
+      <Route path="/" element={<Landing/>}/>
+      <Route path='/chat' element={<ChatPage/>}/>
+
+     </Routes>
+     </BrowserRouter>
     </>
   )
 }
