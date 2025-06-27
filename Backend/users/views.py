@@ -29,23 +29,32 @@ def signup(request):
     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
 
 
+# views.py
 @csrf_exempt
 def login(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        userid = data.get('userid')
+        identifier = data.get('userid')  # can be userid or email
         password = data.get('password')
 
-        if not userid or not password:
-            return JsonResponse({'error': 'User ID and password are required'}, status=400)
+        if not identifier or not password:
+            return JsonResponse({'error': 'User ID/Email and password are required'}, status=400)
 
-        try:
-            user = User.objects.get(userid=userid)
-            if user.password == password:
-                return JsonResponse({'message': 'Login successful'}, status=200)
-            else:
-                return JsonResponse({'error': 'Incorrect password'}, status=401)
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
+        # Check if identifier looks like an email
+        if '@' in identifier:
+            try:
+                user = User.objects.get(email=identifier)
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'Email not found'}, status=404)
+        else:
+            try:
+                user = User.objects.get(userid=identifier)
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'User ID not found'}, status=404)
+
+        if user.password == password:
+            return JsonResponse({'message': 'Login successful'}, status=200)
+        else:
+            return JsonResponse({'error': 'Incorrect password'}, status=401)
 
     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
