@@ -1,46 +1,85 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
-const Login = () => {
+const Login = () => {     
   const [formData, setFormData] = useState({ userid: "", password: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/journal";  
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { userid, password } = formData;
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  const { userid, password } = formData;
 
-    if (!userid || !password) {
-      setError("All fields are required.");
-      return;
-    }
+  if (!userid || !password) {
+    setError("All fields are required.");
+    return;
+  }
 
-    try {
-      const res = await fetch("http://localhost:8000/api/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userid, password }),
-      });
+  try {
+    const res = await fetch("http://localhost:8000/api/login/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userid, password }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (res.ok) {
-        setError("");
-        sessionStorage.setItem('token', data.token);
-        alert("Login Successful!");
-        // 🚀 Do something after login success, like redirect
-        navigate("/"); // or your main page
-      } else {
-        setError(data.error || "Login failed");
+   if (res.ok) {
+      setError("");
+      sessionStorage.setItem("token", data.token);
+      sessionStorage.setItem("userid", data.userid); // ✅ Add this line
+      alert("Login Successful!");
+      console.log("🧑 User ID:", sessionStorage.getItem("userid"));
+
+
+      // ✅ Step: Check and save any pending journal
+      const pendingText = sessionStorage.getItem("pending_journal");
+      const pendingAnalysis = sessionStorage.getItem("pending_analysis");
+
+     if (pendingText && pendingAnalysis) {
+      try {
+        console.log("💾 Auto-saving journal with:", {
+          userid: data.userid,
+          text: pendingText,
+          analysis: JSON.parse(pendingAnalysis),
+        });
+
+        await fetch("http://localhost:8000/journal/save/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${data.token}`,
+          },
+          body: JSON.stringify({
+            userid: data.userid, // make sure to send userid here
+            text: pendingText,
+            analysis: JSON.parse(pendingAnalysis),
+          }),
+        });
+
+        sessionStorage.removeItem("pending_journal");
+        sessionStorage.removeItem("pending_analysis");
+      } catch (saveError) {
+        console.error("❌ Failed to auto-save journal after login:", saveError);
       }
-    } catch (err) {
-      setError("Something went wrong. Please try again.");
     }
+
+
+      // ✅ Redirect back to where user came from
+      navigate(from, { replace: true });
+    } else {
+      setError(data.error || "Login failed");
+    }
+  } catch (err) {
+    setError("Something went wrong. Please try again.");
+  }
   };
 
   return (

@@ -53,7 +53,11 @@ def login(request):
                 return JsonResponse({'error': 'User ID not found'}, status=404)
 
         if user.password == password:
-            return JsonResponse({'message': 'Login successful'}, status=200)
+          
+            return JsonResponse({
+                'message': 'Login successful',
+                'userid': user.userid  # ✅ Now sending userid
+            }, status=200)
         else:
             return JsonResponse({'error': 'Incorrect password'}, status=401)
 

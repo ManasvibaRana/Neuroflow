@@ -1,0 +1,14 @@
+django>=4.2,<5.0
+djangorestframework
+django-cors-headers
+python-decouple
+psycopg2-binary
+Pillow
+django-environ
+gunicorn
+whitenoise
+dotenv
+googlegoogle-generativeai
+react-modal
+react-calendar
+axios
