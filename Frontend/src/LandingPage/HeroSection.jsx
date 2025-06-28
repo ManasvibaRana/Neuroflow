@@ -3,7 +3,7 @@ import brainAnimation from "../LandingPage/Images/brain.json"; // adjust path if
 
 function HeroSection() {
   return (
-    <section className="bg-[#f9f9fc] min-h-screen flex flex-col md:flex-row items-center justify-between px-6 md:px-20 py-16">
+    <section className="bg-[#f9f9fc] min-h-screen flex flex-col md:flex-row items-center justify-between px-6 md:px-20 py-16" id="Home">
       {/* Text Content */}
       <div className="max-w-xl mb-10 md:mb-0">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-800 leading-tight">

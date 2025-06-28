@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Footer() {
   return (
-    <footer className="text-gray-100 bg-gray-800 mt-20">
+    <footer className="text-gray-100 bg-gray-800 mt-20" id="Contact">
       <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
         {/* App Logo & Intro */}
         <div>
