@@ -1,5 +1,4 @@
-import React from "react";
-import background from "../LandingPage/Images/review.png"; // adjust path if needed
+ // adjust path if needed
 
 const reviewsTop = [
   {

@@ -1,7 +1,14 @@
-import React from "react";
-import brain from "../LandingPage/Images/brain.gif";
+import { useNavigate } from "react-router-dom";
 
-function Navbar({ onLoginClick }) {
+function Navbar() {
+
+  const navigate = useNavigate()
+ 
+  function handleNavigate(){
+      navigate("/login")
+  }
+
+
   return (
     <nav className="bg-[linear-gradient(45deg,#796fc1_0%,#838beb_100%)] text-white shadow-md">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -30,7 +37,7 @@ function Navbar({ onLoginClick }) {
         </div>
 
         <button
-          onClick={onLoginClick}
+          onClick={handleNavigate}
           className="bg-white text-indigo-800 font-medium py-1.5 px-4 rounded-lg shadow-md hover:bg-indigo-100 transition"
         >
           Sign In
