@@ -18,9 +18,11 @@ function Landing() {
 
   return (
     <>
-          <Navbar />
-     
-          <HeroSection />
+ 
+          <Navbar/>
+
+          <HeroSection  />
+    
           <Journal />
           <Review />
           <Footer />

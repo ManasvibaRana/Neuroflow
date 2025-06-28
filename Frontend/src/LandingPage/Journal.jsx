@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import J from "../LandingPage/Images/j.jpg";
-import main1 from "../LandingPage/Images/main-1.jpg";
-import s12 from "../LandingPage/Images/side-12.jpg";
-import s13 from "../LandingPage/Images/side-13.jpg";
-import main2 from "../LandingPage/Images/main-2.jpg";
-import s22 from "../LandingPage/Images/side-22.jpg";
-import s33 from "../LandingPage/Images/side-33.jpg";
+
+import main1 from "./Images/main-1.jpg";
+import s12 from "./Images/side-12.jpg";
+import s13 from "./Images/side-13.jpg";
+import main2 from "./Images/main-2.jpg";
+import s22 from "./Images/side-22.jpg";
+import s33 from "./Images/side-33.jpg";
 
 export default function HeroSection() {
   const sectionRef = useRef(null);
@@ -41,7 +41,9 @@ export default function HeroSection() {
   const getImageTransform = () => `translateY(${offsetY * 0.08}px)`;
 
   return (
-    <div
+
+
+    <div id="About"
       ref={sectionRef}
       className={`bg-[#f9f9fc] w-full flex flex-col items-center justify-center px-6 md:px-16 pt-10 pb-40 transition-all duration-700 ease-out ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"

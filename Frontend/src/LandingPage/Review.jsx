@@ -25,7 +25,7 @@ const reviewsBottom = [
 export default function AutoScrollReview() {
   return (
     <>
-      <h2 className="text-3xl font-semibold text-center text-gray-800 mb-10 bg-[#f9f9fc]">
+      <h2 className="text-3xl font-semibold text-center text-gray-800 mb-10 bg-[#f9f9fc]" id="Review">
         Here's what people are saying...
       </h2>
       <div className="py-12 bg-indigo-50 relative">

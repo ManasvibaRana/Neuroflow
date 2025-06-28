@@ -7,6 +7,7 @@ import Signup from './Login/Signup';
 import J1 from './Journal/JournalForm';
 import { Routes, Route } from 'react-router-dom';
 import { BrowserRouter } from 'react-router-dom';
+import Pomodo from "./Pomodo/Pomodo";
 
 const PrivateRoute = ({ children }) => {
   const location = useLocation();
@@ -24,7 +25,10 @@ export function App() {
       <Route path='/chat' element={<ChatPage/>}/>
       <Route path='/login' element={<Login/>}/>
       <Route path="/signup" element={<Signup />} />
+
       <Route path="/journal" element={<J1 />} />
+
+      <Route path="/pomodo" element={<Pomodo/>}/>
       </Routes> 
      </BrowserRouter>
 
