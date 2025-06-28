@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Link } from 'react-scroll';
 
 function Navbar() {
 
@@ -10,7 +11,7 @@ function Navbar() {
 
 
   return (
-    <nav className="bg-[linear-gradient(45deg,#796fc1_0%,#838beb_100%)] text-white shadow-md">
+    <nav className="bg-[linear-gradient(45deg,#796fc1_0%,#838beb_100%)] text-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           {/* <img
@@ -22,18 +23,15 @@ function Navbar() {
         </div>
 
         <div className="space-x-6 hidden md:flex">
-          <a href="#features" className="hover:text-indigo-200 transition">
-            Features
-          </a>
-          <a href="#journal" className="hover:text-indigo-200 transition">
-            Journal
-          </a>
-          <a href="#dashboard" className="hover:text-indigo-200 transition">
-            Dashboard
-          </a>
-          <a href="#contact" className="hover:text-indigo-200 transition">
-            Contact
-          </a>
+         
+        <Link to="Home" className="hover:text-indigo-200 transition cursor-pointer"  smooth={true} duration={500}>Home</Link>
+        <Link to="About" className="hover:text-indigo-200 transition cursor-pointer"  smooth={true} duration={500}>About</Link> 
+        <Link to="Review" className="hover:text-indigo-200 transition cursor-pointer"  smooth={true} duration={500}>Review</Link>
+        <Link to="Features" className="hover:text-indigo-200 transition cursor-pointer"  smooth={true} duration={500}>Features</Link>
+        <Link to="Contact" className="hover:text-indigo-200 transition cursor-pointer"  smooth={true} duration={500}>Contact</Link>
+         
+            
+        
         </div>
 
         <button
