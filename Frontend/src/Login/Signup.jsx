@@ -103,7 +103,7 @@ const Signup = () => {
             onClick={() => navigate("/login")}
             className="text-indigo-600 font-medium hover:underline"
           >
-            Sign In
+            LogIn
           </button>
         </p>
       </div>
