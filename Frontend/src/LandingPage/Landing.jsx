@@ -11,7 +11,7 @@ import Footer from "./Footer";
 function Landing() {
  
   useEffect(() => {
-    AOS.init({ duration: 800, once: true });
+    AOS.init({ duration: 800, once: true }); 
   }, []);
 
 
