@@ -6,7 +6,7 @@ import React from "react";
 
 function Navbar() {
   return (
-    <nav className="bg-indigo-700 text-white shadow-md sticky z-50">
+    <nav className="bg-indigo-800 text-white shadow-md sticky z-50">
       <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
         {/* Logo / Brand */}
 
