@@ -4,6 +4,7 @@ import brainAnimation from "../LandingPage/Images/brain.json";
 
 function HeroSection() {
   return (
+
     <section
       className="relative w-full min-h-screen flex items-center bg-white overflow-hidden"
       id="Home"
@@ -37,6 +38,32 @@ function HeroSection() {
               Learn More
             </a>
           </div>
+
+    <section className="bg-[#f9f9fc] min-h-screen flex flex-col md:flex-row items-center justify-between px-6 md:px-20 py-16" id="Home">
+      {/* Text Content */}
+      <div className="max-w-xl mb-10 md:mb-0">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-800 leading-tight">
+          Welcome to <span className="text-[#796fc1]">NeuroFlow</span>
+        </h1>
+        <p className="text-gray-600 mt-4 text-lg">
+          Track your <strong>mood</strong>, improve your{" "}
+          <strong>productivity</strong>, and take control of your mental
+          wellness.
+        </p>
+        <div className="mt-8">
+          <a
+            href="/dashboard"
+            className="bg-[#796fc1] hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-xl shadow-lg transition duration-300"
+          >
+            Start Tracking
+          </a>
+          <a
+            href="#features"
+            className="ml-4 text-indigo-600 hover:underline font-medium"
+          >
+            Learn More
+          </a>
+
         </div>
 
         {/* Right Animation */}
