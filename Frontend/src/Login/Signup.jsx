@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +9,8 @@ const Signup = () => {
   });
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/journal"; // where to go after signup
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -41,10 +43,43 @@ const Signup = () => {
 
       if (res.ok) {
         setError("");
-        sessionStorage.setItem('token', data.token);
-
+        sessionStorage.setItem("token", data.token);
+        sessionStorage.setItem("userid", userid); // Save for journal use
         alert("Sign Up Successful!");
-        navigate("/login");
+
+        // ✅ Auto-save journal if written before signup
+        const pendingText = sessionStorage.getItem("pending_journal");
+        const pendingAnalysis = sessionStorage.getItem("pending_analysis");
+
+        if (pendingText && pendingAnalysis) {
+          try {
+            console.log("💾 Auto-saving journal after signup:", {
+              userid,
+              text: pendingText,
+              analysis: JSON.parse(pendingAnalysis),
+            });
+
+            await fetch("http://localhost:8000/journal/save/", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${data.token}`,
+              },
+              body: JSON.stringify({
+                userid,
+                text: pendingText,
+                analysis: JSON.parse(pendingAnalysis),
+              }),
+            });
+
+            sessionStorage.removeItem("pending_journal");
+            sessionStorage.removeItem("pending_analysis");
+          } catch (saveError) {
+            console.error("❌ Failed to auto-save journal after signup:", saveError);
+          }
+        }
+
+        navigate(from, { replace: true });
       } else {
         setError(data.error || "Sign up failed");
       }
@@ -103,7 +138,7 @@ const Signup = () => {
             onClick={() => navigate("/login")}
             className="text-indigo-600 font-medium hover:underline"
           >
-            LogIn
+            Log In
           </button>
         </p>
       </div>
