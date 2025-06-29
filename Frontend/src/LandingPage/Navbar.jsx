@@ -50,11 +50,13 @@ function Navbar() {
 
       {/* Desktop Menu */}
       <div className="space-x-6 hidden md:flex items-center">
+
         {["Home", "About", "Review", "Features", "Contact"].map((item) => (
           <Link
             key={item}
             to={item}
             className="hover:text-[#838beb] hover:scale-110 transition duration-200 cursor-pointer"
+
             smooth={true}
             duration={500}
           >

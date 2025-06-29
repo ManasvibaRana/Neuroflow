@@ -131,7 +131,7 @@ export default function J1() {
   return (
     <ThemeProvider theme={themes[theme]}>
       <GlobalStyle />
-        <Navbar/>
+      <Navbar/>
       <Wrapper>
       <Header>
   <LeftSection>
