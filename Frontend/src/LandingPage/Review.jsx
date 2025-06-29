@@ -1,4 +1,4 @@
- // adjust path if needed
+// adjust path if needed
 
 const reviewsTop = [
   {
@@ -25,14 +25,17 @@ const reviewsBottom = [
 export default function AutoScrollReview() {
   return (
     <>
-      <h2 className="text-3xl font-semibold text-center text-gray-800 mb-10 bg-[#f9f9fc]" id="Review">
-        Here's what people are saying...
-      </h2>
-      <div className="py-12 bg-indigo-50 relative">
+      <div className="py-12 bg-[#838beb]/30 relative">
+        <h2
+          className="text-3xl font-semibold text-center text-gray-800 mb-10"
+          id="Review"
+        >
+          Here's what people are saying...
+        </h2>
         {/* Fade Effect Left */}
-        <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-indigo-50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 left-0 w-28 h-full bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
         {/* Fade Effect Right */}
-        <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-indigo-50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-28 h-full bg-gradient-to-l from-[#838beb]/50 to-transparent z-10 pointer-events-none" />
 
         {/* Scroll Row 1 */}
         <div className="w-full overflow-hidden">
@@ -41,7 +44,7 @@ export default function AutoScrollReview() {
               <div
                 key={`top-${i}`}
                 className="bg-white shadow-md rounded-xl px-6 py-4 mx-2 min-w-[280px] max-w-sm 
-            flex-shrink-0 overflow-hidden break-words border-2 border-indigo-100"
+            flex-shrink-0 overflow-hidden break-words border-2 border-[#838beb]/50"
               >
                 <p className="text-gray-700 italic mb-2 text-sm leading-relaxed line-clamp-5">
                   “{review.text}”
@@ -61,7 +64,7 @@ export default function AutoScrollReview() {
               <div
                 key={`bottom-${i}`}
                 className="bg-white shadow-md rounded-xl px-6 py-4 mx-2 min-w-[280px] max-w-sm 
-            flex-shrink-0 overflow-hidden break-words border-2 border-indigo-100"
+            flex-shrink-0 overflow-hidden break-words border-2 border-[#838beb]/50"
               >
                 <p className="text-gray-700 italic mb-2 text-sm leading-relaxed line-clamp-5">
                   “{review.text}”

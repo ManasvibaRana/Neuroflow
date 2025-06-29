@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
         {/* App Logo & Intro */}
         <div>
-          <h2 className="text-xl font-semibold text-indigo-600 mb-2">
+          <h2 className="text-xl font-semibold text-[#838beb] mb-2">
             NeuroFlow
           </h2>
           <p className="text-sm">

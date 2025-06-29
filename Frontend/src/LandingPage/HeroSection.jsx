@@ -9,14 +9,17 @@ function HeroSection() {
       id="Home"
     >
       {/* Left Purple Background Half */}
-      <div className="absolute inset-y-0 left-0 w-[55%] bg-gradient-to-br from-[#796fc1] to-[#838beb] z-0 rounded-br-[500px] rounded-tr-[40%]" />
+      <div
+        className="absolute inset-y-0 md:w-[55%] w-[200%] bg-gradient-to-br from-[#796fc1] to-[#838beb] z-0 
+      rounded-b-[700px] md:rounded-bl-[0] md:rounded-br-[500px] md:rounded-tr-[40%] -left-[50%] md:-left-0"
+      />
 
       {/* Hero Content */}
       <div className="relative z-10 flex flex-col-reverse md:flex-row items-center w-full max-w-7xl mx-auto ml-4 px-10 py-28 md:py-36">
         {/* Left Content */}
         <div className="w-full md:w-1/2 text-white pr-6">
           <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
-            The World’s First <br />
+            The World's First <br />
             Intelligent Journal
           </h1>
           <p className="text-indigo-100 text-lg mb-8">
