@@ -1,0 +1,341 @@
+import React, { useState, useEffect } from "react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+
+const quadrants = [
+  { id: "1", title: "DO THIS", color: "bg-blue-100" },
+  { id: "2", title: "DECIDE THIS", color: "bg-green-100" },
+  { id: "3", title: "DELEGATE THIS", color: "bg-orange-100" },
+  { id: "4", title: "DELETE THIS", color: "bg-red-100" },
+];
+
+const motivationalQuotes = [
+  '"Small steps every day lead to big results."',
+  '"Your only limit is your mind."',
+  '"Push yourself, because no one else is going to do it for you."',
+  '"Dream it. Wish it. Do it."',
+  '"Success doesn\'t come from what you do occasionally. It comes from what you do consistently."',
+];
+
+const EisenhowerMatrix = () => {
+  const [tasks, setTasks] = useState({ 1: [], 2: [], 3: [], 4: [] });
+  const [newTask, setNewTask] = useState("");
+  const [selectedQuadrant, setSelectedQuadrant] = useState("1");
+  const [showTimeModal, setShowTimeModal] = useState(false);
+  const [tempTime, setTempTime] = useState({ h: "", m: "", s: "" });
+  const [quote, setQuote] = useState("");
+  const [showTookModal, setShowTookModal] = useState(false);
+  const [tookTime, setTookTime] = useState({ h: "", m: "", s: "" });
+  const [currentToggledTask, setCurrentToggledTask] = useState({
+    id: null,
+    index: null,
+  });
+
+  useEffect(() => {
+    const random = Math.floor(Math.random() * motivationalQuotes.length);
+    setQuote(motivationalQuotes[random]);
+  }, []);
+
+  const isTimeValid = () =>
+    tempTime.h !== "" && tempTime.m !== "" && tempTime.s !== "";
+
+  const formatTime = () =>
+    `${tempTime.h.padStart(2, "0")}:${tempTime.m.padStart(
+      2,
+      "0"
+    )}:${tempTime.s.padStart(2, "0")}`;
+
+  const addTask = () => {
+    if (!newTask.trim()) return alert("Please enter a task.");
+    if (!isTimeValid()) return alert("Please set time.");
+    const formattedTime = formatTime();
+    setTasks((prev) => ({
+      ...prev,
+      [selectedQuadrant]: [
+        ...prev[selectedQuadrant],
+        {
+          text: newTask,
+          time: formattedTime,
+          completed: false,
+          took: null,
+        },
+      ],
+    }));
+    setNewTask("");
+    setTempTime({ h: "", m: "", s: "" });
+    setShowTimeModal(false);
+  };
+
+  const deleteTask = (id, index) => {
+    const updated = tasks[id].filter((_, i) => i !== index);
+    setTasks({ ...tasks, [id]: updated });
+  };
+
+  const toggleTask = (id, index) => {
+    const task = tasks[id][index];
+    if (!task.completed) {
+      setCurrentToggledTask({ id, index });
+      setShowTookModal(true);
+    } else {
+      const updated = [...tasks[id]];
+      updated[index].completed = false;
+      updated[index].took = null;
+      setTasks({ ...tasks, [id]: updated });
+    }
+  };
+
+  const confirmTookTime = () => {
+    const { h, m, s } = tookTime;
+    if (!h || !m || !s) return alert("Please enter full completion time.");
+    const formattedTook = `${h.padStart(2, "0")}:${m.padStart(
+      2,
+      "0"
+    )}:${s.padStart(2, "0")}`;
+    const { id, index } = currentToggledTask;
+    const updated = [...tasks[id]];
+    updated[index].completed = true;
+    updated[index].took = formattedTook;
+    setTasks({ ...tasks, [id]: updated });
+    setTookTime({ h: "", m: "", s: "" });
+    setShowTookModal(false);
+  };
+
+  const onDragEnd = (result) => {
+    const { source, destination } = result;
+    if (!destination) return;
+
+    const srcId = source.droppableId;
+    const destId = destination.droppableId;
+    const sourceTasks = [...tasks[srcId]];
+    const [removed] = sourceTasks.splice(source.index, 1);
+
+    if (srcId === destId) {
+      sourceTasks.splice(destination.index, 0, removed);
+      setTasks({ ...tasks, [srcId]: sourceTasks });
+    } else {
+      const destTasks = [...tasks[destId]];
+      destTasks.splice(destination.index, 0, removed);
+      setTasks({
+        ...tasks,
+        [srcId]: sourceTasks,
+        [destId]: destTasks,
+      });
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center px-4 font-mono bg-white min-h-screen relative">
+      <h1 className="text-3xl mb-2 font-bold mt-10">TO-DO List</h1>
+      <p className="text-sm text-gray-600 italic mb-4">{quote}</p>
+
+      {/* Input Area */}
+      <div className="flex flex-wrap gap-2 w-full max-w-4xl mb-8 items-center relative">
+        <input
+          type="text"
+          placeholder="Add task..."
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+          className="flex-1 border p-2 rounded"
+        />
+
+        <div className="relative">
+          <button
+            onClick={() => setShowTimeModal((prev) => !prev)}
+            className="flex items-center gap-1 bg-gray-200 px-2 py-1 rounded"
+          >
+            🕒 Set Time
+          </button>
+
+          {showTimeModal && (
+            <div className="absolute top-full mt-1 left-0 z-10 bg-white border p-4 rounded shadow-md">
+              <h3 className="text-sm font-semibold mb-2">
+                Set Time (HH:MM:SS)
+              </h3>
+              <div className="flex gap-2 items-center">
+                {["h", "m", "s"].map((unit) => (
+                  <input
+                    key={unit}
+                    type="number"
+                    placeholder={unit.toUpperCase()}
+                    min="0"
+                    max={unit === "h" ? "23" : "59"}
+                    value={tempTime[unit]}
+                    onChange={(e) =>
+                      setTempTime({ ...tempTime, [unit]: e.target.value })
+                    }
+                    className="w-12 border rounded px-1"
+                  />
+                ))}
+                <button
+                  onClick={() => {
+                    if (!isTimeValid()) return alert("Please enter full time.");
+                    setShowTimeModal(false);
+                  }}
+                  className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
+                >
+                  Set
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <select
+          value={selectedQuadrant}
+          onChange={(e) => setSelectedQuadrant(e.target.value)}
+          className="border p-2 rounded"
+        >
+          {quadrants.map((q) => (
+            <option key={q.id} value={q.id}>
+              {q.title}
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={addTask}
+          className="bg-black text-white px-4 py-2 rounded"
+        >
+          Add
+        </button>
+      </div>
+
+      {/* Axis Labels */}
+      <div className="relative max-w-5xl w-full mt-10">
+        <div className="absolute top-[-4.5rem] left-0 right-0 flex justify-center text-sm font-semibold mt-6">
+          <div className="flex justify-around w-full max-w-4xl">
+            <div className="bg-gray-200 p-2 rounded-md w-1/2 text-center mr-2">
+              Urgent
+            </div>
+            <div className="bg-gray-200 p-2 rounded-md w-1/2 text-center ml-2">
+              Not Urgent
+            </div>
+          </div>
+        </div>
+        <div className="absolute top-0 bottom-0 -left-12 flex flex-col justify-between text-sm font-semibold h-full py-1">
+          <div className="bg-gray-200 p-2 py-2 rounded-md transform -rotate-90 origin-top-left whitespace-nowrap mt-44 text-center px-12">
+            Important
+          </div>
+          <div className="bg-gray-200 p-2 rounded-md transform -rotate-90 origin-top-left py-2 whitespace-nowrap mt-48 text-center px-12">
+            Not Important
+          </div>
+        </div>
+
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="grid grid-cols-2 grid-rows-2 gap-4">
+            {quadrants.map((q) => (
+              <Droppable droppableId={q.id} key={q.id}>
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className={`p-4 border ${q.color} flex flex-col min-h-[200px] rounded-lg`}
+                  >
+                    <h2 className="text-xl font-bold mb-2">{q.title}</h2>
+                    <div className="flex-1 overflow-y-auto pr-1 max-h-60">
+                      <ul className="flex flex-col gap-1">
+                        {tasks[q.id].map((task, index) => (
+                          <Draggable
+                            key={`${q.id}-${index}`}
+                            draggableId={`${q.id}-${index}`}
+                            index={index}
+                          >
+                            {(provided) => (
+                              <li
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className="relative flex items-center justify-between bg-white p-2 rounded shadow-sm text-sm"
+                              >
+                                <div className="flex items-center gap-2 w-full">
+                                  <input
+                                    type="checkbox"
+                                    checked={task.completed}
+                                    onChange={() => toggleTask(q.id, index)}
+                                  />
+                                  <span
+                                    className={`$${
+                                      task.completed
+                                        ? "line-through text-gray-500"
+                                        : ""
+                                    } break-all`}
+                                  >
+                                    {task.text}
+                                  </span>
+                                  <span className="text-xs text-gray-600 whitespace-nowrap">
+                                    ⏰ {task.time}
+                                  </span>
+                                  {task.completed && task.took && (
+                                    <span className="text-xs text-gray-600 whitespace-nowrap">
+                                      🕓 Took: {task.took}
+                                    </span>
+                                  )}
+                                  <button
+                                    onClick={() => deleteTask(q.id, index)}
+                                    className="text-red-600 font-bold"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </li>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </Droppable>
+            ))}
+          </div>
+        </DragDropContext>
+      </div>
+
+      {/* Modal for Took Time */}
+      {showTookModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-4 rounded shadow-md">
+            <h3 className="text-lg font-semibold mb-2">
+              How long did it take?
+            </h3>
+            <div className="flex gap-2 items-center mb-4">
+              {["h", "m", "s"].map((unit) => (
+                <input
+                  key={unit}
+                  type="number"
+                  placeholder={unit.toUpperCase()}
+                  min="0"
+                  max={unit === "h" ? "23" : "59"}
+                  value={tookTime[unit]}
+                  onChange={(e) =>
+                    setTookTime({ ...tookTime, [unit]: e.target.value })
+                  }
+                  className="w-12 border rounded px-1"
+                />
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setTookTime({ h: "", m: "", s: "" });
+                  setShowTookModal(false);
+                }}
+                className="px-4 py-1 bg-gray-300 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmTookTime}
+                className="px-4 py-1 bg-blue-600 text-white rounded"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EisenhowerMatrix;
