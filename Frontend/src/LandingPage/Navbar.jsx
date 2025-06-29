@@ -61,6 +61,7 @@ function Navbar() {
             {item}
           </Link>
         ))}
+
         <button
           onClick={handleNavigate}
           className="bg-[#838beb] text-white font-medium py-1.5 px-4 rounded-xl shadow-md hover:bg-[#838bee] hover:scale-110 transition duration-500"

@@ -6,8 +6,6 @@ import Signup from "./Login/Signup";
 import { Routes, Route } from "react-router-dom";
 import { BrowserRouter } from "react-router-dom";
 import Pomodo from "./Pomodo/Pomodo";
-import Productivity from "./Productivity/Productivity";
-import Journal from "./Journal/Journal";
 
 export function App() {
   return (
@@ -15,8 +13,6 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/Productivity" element={<Productivity />} />
-          <Route path="/Journal" element={<Journal />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />

@@ -41,8 +41,9 @@ export default function HeroSection() {
   const getImageTransform = () => `translateY(${offsetY * 0.08}px)`;
 
   return (
-    <div
-      id="About"
+
+
+    <div id="About"
       ref={sectionRef}
       className={`bg-[#f9f9fc] w-full flex flex-col items-center justify-center px-6 md:px-16 pt-10 pb-40 transition-all duration-700 ease-out ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"
