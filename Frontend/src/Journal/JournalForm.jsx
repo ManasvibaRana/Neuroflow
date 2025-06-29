@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styled, { ThemeProvider, createGlobalStyle } from "styled-components";
 import Calendar from "react-calendar";
 import Modal from "react-modal";
@@ -11,30 +11,21 @@ const themes = {
   pastelBlue: {
     name: "Pastel Blue 💙",
     notebookBackground: "linear-gradient(135deg, #d0eefd, #f0f8ff)",
-    buttonColor: "#87CEFA"
+    buttonColor: "#87CEFA",
   },
   pastelPink: {
     name: "Pastel Pink 💗",
     notebookBackground: "linear-gradient(135deg, #fddde6, #ffe0f0)",
-    buttonColor: "#FFB6C1"
+    buttonColor: "#FFB6C1",
   },
   pastelGreen: {
     name: "Pastel Green 💚",
     notebookBackground: "linear-gradient(135deg, #d4fddf, #e0ffe5)",
-    buttonColor: "#98FB98"
-  }
+    buttonColor: "#98FB98",
+  },
 };
 
 const emojis = ["😊", "😢", "😡", "😂", "😴", "🤯", "😍", "🤓", "🥳"];
-
-const ambientSounds = {
-  Rain: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-  Ocean: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-  Piano: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-  Campfire: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_e1be4dc0d6.mp3?filename=campfire-102267.mp3",
-  Birds: "https://cdn.pixabay.com/download/audio/2021/08/08/audio_8b22d5c40f.mp3?filename=birds-chirping-112177.mp3",
-  Meditation: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_5f5e6f3690.mp3?filename=soft-meditation-ambient-111974.mp3"
-};
 
 const formatDate = (date) => date.toISOString().split("T")[0];
 
@@ -48,52 +39,57 @@ export default function J1() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [audioSource, setAudioSource] = useState(ambientSounds.Rain);
+  const [songs, setSongs] = useState([]);
+  const [audioSource, setAudioSource] = useState("");
   const [isAudioPlaying, setIsAudioPlaying] = useState(true);
   const audioRef = useRef(null);
-  const todayStr = formatDate(new Date());
+  const navigate = useNavigate();
+  const location = "/journal";
 
-  const navigate = useNavigate(); // ✅ now inside component
-  const location = "/journal";    // 👈 we know this is the current route
+  // ✅ Load songs from Django
+  useEffect(() => {
+    fetch("http://localhost:8000/music/songs/")
+      .then((res) => res.json())
+      .then((data) => {
+        setSongs(data);
+        if (data.length > 0) {
+          setAudioSource(data[0].url);
+        }
+      })
+      .catch((err) => console.error("Error fetching songs:", err));
+  }, []);
 
   const handleNavigate = (to) => {
     navigate(to, { state: { from: location } });
   };
 
- 
-
-
   const handleSubmit = async () => {
     if (!text.trim()) return;
 
     try {
-      // 1. Analyze journal first
-      const response = await axios.post("http://127.0.0.1:8000/journal/analyze/", { text });
+      const response = await axios.post(
+        "http://127.0.0.1:8000/journal/analyze/",
+        { text }
+      );
       const { top_emotions, highlight } = response.data;
       setAnalysisResult({ top_emotions, highlight });
 
       const token = sessionStorage.getItem("token");
 
-       console.log("📤 Saving journal with:", {
-        userid: sessionStorage.getItem("userid"),
-        text,
-        analysis: { top_emotions, highlight }
-      });
-      console.log("🔐 Token:", token);
-      // 2. If not logged in, store in session
       if (!token) {
         sessionStorage.setItem("pending_journal", text);
-        sessionStorage.setItem("pending_analysis", JSON.stringify({ top_emotions, highlight }));
+        sessionStorage.setItem(
+          "pending_analysis",
+          JSON.stringify({ top_emotions, highlight })
+        );
         return;
       }
 
-      // 3. Save journal if token is available
       await axios.post("http://127.0.0.1:8000/journal/save/", {
-        userid: sessionStorage.getItem("userid"),  // ✅ Send user ID
+        userid: sessionStorage.getItem("userid"),
         text,
-        analysis: { top_emotions, highlight }
+        analysis: { top_emotions, highlight },
       });
-
     } catch (error) {
       console.error("❌ Error submitting journal:", error);
     }
@@ -131,79 +127,99 @@ export default function J1() {
   return (
     <ThemeProvider theme={themes[theme]}>
       <GlobalStyle />
-      <Navbar/>
+      <Navbar />
       <Wrapper>
-      <Header>
-  <LeftSection>
-    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-      <DateBox>{new Date().toDateString()}</DateBox>
-      <CalendarButton onClick={() => setCalendarOpen(true)}>📅</CalendarButton>
-    </div>
+        <Header>
+          <LeftSection>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <DateBox>{new Date().toDateString()}</DateBox>
+              <CalendarButton onClick={() => setCalendarOpen(true)}>
+                📅
+              </CalendarButton>
+            </div>
 
-    <AudioControls style={{ marginLeft: "200px" }}>
-      <label htmlFor="soundSelect">🎵</label>
-      <select
-        id="soundSelect"
-        value={audioSource}
-        onChange={(e) => {
-          setAudioSource(e.target.value);
-          setTimeout(() => audioRef.current?.play(), 100);
-        }}
-      >
-        {Object.entries(ambientSounds).map(([label, url], i) => (
-          <option key={i} value={url}>{label}</option>
-        ))}
-      </select>
-      <button onClick={toggleAudio}>
-        {isAudioPlaying ? "⏸" : "▶"}
-      </button>
-    </AudioControls>
-  </LeftSection>
+            <AudioControls style={{ marginLeft: "200px" }}>
+              <label htmlFor="soundSelect">🎵</label>
+              <select
+                id="soundSelect"
+                value={audioSource}
+                onChange={(e) => {
+                  setAudioSource(e.target.value);
+                  setTimeout(() => audioRef.current?.play(), 100);
+                }}
+              >
+                {songs.map((song) => (
+                  <option key={song.id} value={song.url}>
+                    {song.name}
+                  </option>
+                ))}
+              </select>
+              <button onClick={toggleAudio}>
+                {isAudioPlaying ? "⏸" : "▶"}
+              </button>
+            </AudioControls>
+          </LeftSection>
 
-  <RightSection>
-    <ThemeSelector value={theme} onChange={(e) => setTheme(e.target.value)}>
-      {Object.entries(themes).map(([key, val]) => (
-        <option key={key} value={key}>{val.name}</option>
-      ))}
-    </ThemeSelector>
-
-    <FontSelector value={fontFamily} onChange={(e) => setFontFamily(e.target.value)}>
-      {[
-        { name: "Comic Sans", value: "'Comic Sans MS', cursive" },
-        { name: "Serif", value: "serif" },
-        { name: "Monospace", value: "'Courier New', monospace" },
-        { name: "Quicksand", value: "'Quicksand', sans-serif" },
-        { name: "Caveat", value: "'Caveat', cursive" }
-      ].map((font, idx) => (
-        <option key={idx} value={font.value}>{font.name}</option>
-      ))}
-    </FontSelector>
-
-    <EmojiContainer>
-      <EmojiButton onClick={() => setShowEmojis(!showEmojis)}>{selectedEmoji}</EmojiButton>
-      {showEmojis && (
-        <EmojiPanel>
-          {emojis.map((e, i) => (
-            <EmojiOption
-              key={i}
-              selected={selectedEmoji === e}
-              onClick={() => {
-                setSelectedEmoji(e);
-                setShowEmojis(false);
-              }}
+          <RightSection>
+            <ThemeSelector
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
             >
-              {e}
-            </EmojiOption>
-          ))}
-        </EmojiPanel>
-      )}
-    </EmojiContainer>
-  </RightSection>
-</Header>
+              {Object.entries(themes).map(([key, val]) => (
+                <option key={key} value={key}>
+                  {val.name}
+                </option>
+              ))}
+            </ThemeSelector>
 
+            <FontSelector
+              value={fontFamily}
+              onChange={(e) => setFontFamily(e.target.value)}
+            >
+              {[
+                { name: "Comic Sans", value: "'Comic Sans MS', cursive" },
+                { name: "Serif", value: "serif" },
+                { name: "Monospace", value: "'Courier New', monospace" },
+                { name: "Quicksand", value: "'Quicksand', sans-serif" },
+                { name: "Caveat", value: "'Caveat', cursive" },
+              ].map((font, idx) => (
+                <option key={idx} value={font.value}>
+                  {font.name}
+                </option>
+              ))}
+            </FontSelector>
+
+            <EmojiContainer>
+              <EmojiButton onClick={() => setShowEmojis(!showEmojis)}>
+                {selectedEmoji}
+              </EmojiButton>
+              {showEmojis && (
+                <EmojiPanel>
+                  {emojis.map((e, i) => (
+                    <EmojiOption
+                      key={i}
+                      selected={selectedEmoji === e}
+                      onClick={() => {
+                        setSelectedEmoji(e);
+                        setShowEmojis(false);
+                      }}
+                    >
+                      {e}
+                    </EmojiOption>
+                  ))}
+                </EmojiPanel>
+              )}
+            </EmojiContainer>
+          </RightSection>
+        </Header>
 
         <NotebookContainer>
-          <Notebook style={{ background: themes[theme].notebookBackground, fontFamily }}>
+          <Notebook
+            style={{
+              background: themes[theme].notebookBackground,
+              fontFamily,
+            }}
+          >
             <textarea
               placeholder="Write your journal..."
               value={text}
@@ -215,46 +231,58 @@ export default function J1() {
 
         <SubmitButton onClick={handleSubmit}>📤 Submit Journal</SubmitButton>
 
-      {analysisResult && (
-        <HighlightCard>
-          <h4>📝 Today's Emotional Summary</h4>
+        {analysisResult && (
+          <HighlightCard>
+            <h4>📝 Today's Emotional Summary</h4>
 
-          {analysisResult.top_emotions.map(([emotion, score], i) => (
-            <EmotionBar key={i}>
-              <Label>{emotion}</Label>
-              <BarWrapper>
-                <Bar style={{ width: `${(score * 100).toFixed(0)}%` }} />
-                <Score>{(score * 100).toFixed(0)}%</Score>
-              </BarWrapper>
-            </EmotionBar>
-          ))}
+            {analysisResult.top_emotions.map(([emotion, score], i) => (
+              <EmotionBar key={i}>
+                <Label>{emotion}</Label>
+                <BarWrapper>
+                  <Bar style={{ width: `${(score * 100).toFixed(0)}%` }} />
+                  <Score>{(score * 100).toFixed(0)}%</Score>
+                </BarWrapper>
+              </EmotionBar>
+            ))}
 
-          <p>🧠 Key Insight: <em>"{analysisResult.highlight}"</em></p>
+            <p>
+              🧠 Key Insight: <em>"{analysisResult.highlight}"</em>
+            </p>
 
-          {/* 👉 Show save message if not logged in */}
-          {!sessionStorage.getItem("token") && (
-          <p style={{ marginTop: "10px", color: "#555" }}>
-            🔒 To save this journal and unlock productivity insights,{" "}
-            <span
-              style={{ color: "#007BFF", fontWeight: "bold", cursor: "pointer" }}
-              onClick={() => handleNavigate("/signup")}
-            >
-              Sign up
-            </span>{" "}
-            or{" "}
-            <span
-              style={{ color: "#007BFF", fontWeight: "bold", cursor: "pointer" }}
-              onClick={() => handleNavigate("/login")}
-            >
-              Log in
-            </span>.
-          </p>
+            {!sessionStorage.getItem("token") && (
+              <p style={{ marginTop: "10px", color: "#555" }}>
+                🔒 To save this journal and unlock productivity insights,{" "}
+                <span
+                  style={{
+                    color: "#007BFF",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => handleNavigate("/signup")}
+                >
+                  Sign up
+                </span>{" "}
+                or{" "}
+                <span
+                  style={{
+                    color: "#007BFF",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => handleNavigate("/login")}
+                >
+                  Log in
+                </span>
+                .
+              </p>
+            )}
+          </HighlightCard>
+        )}
 
-          )}
-        </HighlightCard>
-      )}
-
-        <Modal isOpen={calendarOpen} onRequestClose={() => setCalendarOpen(false)}>
+        <Modal
+          isOpen={calendarOpen}
+          onRequestClose={() => setCalendarOpen(false)}
+        >
           <h2>Select a day to view/edit</h2>
           <Calendar
             onClickDay={loadJournal}
@@ -262,7 +290,9 @@ export default function J1() {
               const key = formatDate(date);
               const entry = journalData[key];
               return view === "month" && entry ? (
-                <div style={{ fontSize: "1.2rem", textAlign: "center" }}>{entry.emoji}</div>
+                <div style={{ fontSize: "1.2rem", textAlign: "center" }}>
+                  {entry.emoji}
+                </div>
               ) : null;
             }}
           />
@@ -275,44 +305,17 @@ export default function J1() {
   );
 }
 
-const HighlightCard = styled.div`
-  margin-top: 20px;
-  padding: 20px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #f0f0f0, #e6f7ff);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  color: #333;
-  width: 100%;
-  max-width: 600px;
-
-  h4 {
-    margin-bottom: 10px;
-    color: #2a7bc3;
-  }
-
-  ul {
-    list-style: disc;
-    padding-left: 20px;
-    margin-bottom: 10px;
-  }
-
-  p {
-    font-size: 0.95rem;
-    color: #444;
-  }
-`;
-
-
 const GlobalStyle = createGlobalStyle`
   body {
     margin: 0;
     padding: 0;
     font-family: 'Comic Sans MS', cursive;
-    transition: background 0.5s ease-in-out;
     background: #f9f9f9;
+    transition: background 0.5s ease-in-out;
   }
 `;
 
+// ✅ ... Keep all your styled components (Wrapper, Header, etc.) exactly as you already have.
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -497,6 +500,27 @@ const SubmitButton = styled.button`
 
   &:hover {
     filter: brightness(0.9);
+  }
+`;
+
+const HighlightCard = styled.div`
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f0f0f0, #e6f7ff);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  color: #333;
+  width: 100%;
+  max-width: 600px;
+
+  h4 {
+    margin-bottom: 10px;
+    color: #2a7bc3;
+  }
+
+  p {
+    font-size: 0.95rem;
+    color: #444;
   }
 `;
 
