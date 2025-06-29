@@ -41,7 +41,7 @@ export default function J1() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [songs, setSongs] = useState([]);
   const [audioSource, setAudioSource] = useState("");
-  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false); // ✅ false by default
   const audioRef = useRef(null);
   const navigate = useNavigate();
   const location = "/journal";
@@ -145,7 +145,8 @@ export default function J1() {
                 value={audioSource}
                 onChange={(e) => {
                   setAudioSource(e.target.value);
-                  setTimeout(() => audioRef.current?.play(), 100);
+                  setIsAudioPlaying(false); // Stop playing when changing song
+                  if (audioRef.current) audioRef.current.pause();
                 }}
               >
                 {songs.map((song) => (
@@ -299,11 +300,13 @@ export default function J1() {
           <button onClick={() => setCalendarOpen(false)}>Close</button>
         </Modal>
 
-        <audio ref={audioRef} autoPlay loop src={audioSource} />
+        <audio ref={audioRef} loop src={audioSource} />
       </Wrapper>
     </ThemeProvider>
   );
 }
+
+// === Styles ===
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -315,7 +318,6 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-// ✅ ... Keep all your styled components (Wrapper, Header, etc.) exactly as you already have.
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;

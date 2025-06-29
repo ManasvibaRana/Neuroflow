@@ -1,8 +1,12 @@
 import React from "react";
 import Lottie from "lottie-react";
 import brainAnimation from "../LandingPage/Images/brain.json";
+import { Navigate, useNavigate } from "react-router-dom";
 
 function HeroSection() {
+ 
+  const navigate = useNavigate()
+  
   return (
     <section
       className="relative w-full min-h-screen flex items-center bg-white overflow-hidden"
@@ -24,18 +28,11 @@ function HeroSection() {
             wellness with NeuroFlow.
           </p>
           <div className="flex gap-4 flex-wrap">
-            <a
-              href="/dashboard"
-              className="bg-white text-indigo-800 font-semibold py-3 px-6 rounded-xl shadow-md hover:bg-indigo-100 transition"
-            >
-              Start Tracking
-            </a>
-            <a
-              href="#features"
-              className="text-white underline font-medium hover:text-indigo-200"
-            >
-              Learn More
-            </a>
+           
+              
+            <button className="bg-white text-indigo-800 font-semibold py-3 px-6 rounded-xl shadow-md hover:bg-indigo-100 transition" onClick={()=>{navigate('/journal')}}> Start Tracking </button>
+
+           
           </div>
         </div>
 
