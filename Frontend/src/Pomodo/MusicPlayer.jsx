@@ -2,15 +2,18 @@ import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 
 const MusicPlayer = () => {
-  const tracks = [
-    { name: "Sample 1", artist: "Test Artist", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-    { name: "Sample 2", artist: "Test Artist", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-    { name: "Sample 3", artist: "Test Artist", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
-  ];
-
+  const [tracks, setTracks] = useState([]); // ✅ will store fetched songs
   const [currentTrack, setCurrentTrack] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
+
+  useEffect(() => {
+    // ✅ Fetch songs from Django backend
+    fetch('http://localhost:8000/music/songs/')
+      .then(res => res.json())
+      .then(data => setTracks(data))
+      .catch(err => console.error('Error fetching songs:', err));
+  }, []);
 
   const handlePlay = (track) => {
     if (!audioRef.current) return;
@@ -49,13 +52,13 @@ const MusicPlayer = () => {
         <div className="scroll-list">
           {tracks.map((track, idx) => (
             <div
-              key={idx}
+              key={track.id || idx}
               className={`track-item ${currentTrack?.name === track.name && isPlaying ? 'active' : ''}`}
               onClick={() => handlePlay(track)}
             >
               <div className="track-info">
                 <p className="track-name">{track.name}</p>
-                <p className="track-artist">{track.artist}</p>
+                {/* ✅ artist is ignored */}
               </div>
               {currentTrack?.name === track.name && isPlaying ? (
                 <div className="bars">
@@ -95,7 +98,7 @@ const StyledWrapper = styled.div`
   }
 
   .scroll-list {
-    max-height: 300px;
+    max-height: 200px;
     overflow-y: auto;
   }
 
@@ -126,11 +129,6 @@ const StyledWrapper = styled.div`
   .track-name {
     font-weight: bold;
     color: #333;
-  }
-
-  .track-artist {
-    font-size: 0.8rem;
-    color: #666;
   }
 
   .bars {

@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import Timer from './Timer';
 import Pomodoro from './Pomodoro';
 import MusicPlayer from './MusicPlayer';
+import Navbar from '../Navbar';
+
 
 function Pomodo() {
   const [mode, setMode] = useState('stopwatch');
 
   return (
+
+    <>
+    <Navbar/>
     <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100 flex flex-col items-center justify-start p-8">
+      
       <h1 className="text-4xl font-bold text-gray-700 mb-4">Focus Hub</h1>
 
       {/* Toggle Pills */}
@@ -57,6 +63,7 @@ function Pomodo() {
         </div>
       )}
     </div>
+    </>
   );
 }
 
