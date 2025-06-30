@@ -41,12 +41,12 @@ export default function J1() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [songs, setSongs] = useState([]);
   const [audioSource, setAudioSource] = useState("");
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false); // ✅ false by default
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const audioRef = useRef(null);
   const navigate = useNavigate();
   const location = "/journal";
 
-  // ✅ Load songs from Django
+  // Load songs
   useEffect(() => {
     fetch("http://localhost:8000/music/songs/")
       .then((res) => res.json())
