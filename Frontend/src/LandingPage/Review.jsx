@@ -35,7 +35,7 @@ export default function AutoScrollReview() {
         {/* Fade Effect Left */}
         <div className="absolute top-0 left-0 w-28 h-full bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
         {/* Fade Effect Right */}
-        <div className="absolute top-0 right-0 w-28 h-full bg-gradient-to-l from-[#838beb]/50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-28 h-full bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
 
         {/* Scroll Row 1 */}
         <div className="w-full overflow-hidden">

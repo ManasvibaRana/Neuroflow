@@ -128,7 +128,7 @@ export default function J1() {
     <ThemeProvider theme={themes[theme]}>
       <GlobalStyle />
       <Navbar />
-      <Wrapper className="bg-gradient-to-r from-[#838beb]/10 to-[#838bbb]/20 bg-blur-2xl">
+      <Wrapper className=" bg-blur-2xl">
         <Header>
           <LeftSection className="flex gap-20">
             <div className="flex align-middle gap-10 mt-6">
@@ -327,7 +327,6 @@ const GlobalStyle = createGlobalStyle`
   body {
     margin: 0;
     padding: 0;
-    font-family: 'Comic Sans MS', cursive;
     background: #f9f9f9;
     transition: background 0.5s ease-in-out;
   }

@@ -23,15 +23,17 @@ function Navbar() {
   return (
     <nav
       className={`w-full fixed top-0 left-0 z-50 px-6 md:px-8 py-3 flex justify-between items-center text-gray-800 transition-all duration-300 ${
-        scrolled ? "bg-white/30 backdrop-blur-md shadow-2xl" : "bg-transparent"
+        scrolled
+          ? "bg-white/30 backdrop-blur-md shadow-2xl"
+          : "bg-transparent mt-6"
       }`}
     >
       <span
-        className={`text-2xl font-bold tracking-wide transition-colors duration-300 ${
+        className={`text-2xl font-bold tracking-wide transition-colors duration-300 cursor-pointer ${
           scrolled ? "text-gray-700" : "text-white"
         }`}
       >
-        NeuroFlow
+        <a href="/">NeuroFlow</a>
       </span>
 
       {/* Hamburger Icon for Mobile */}
@@ -50,13 +52,11 @@ function Navbar() {
 
       {/* Desktop Menu */}
       <div className="space-x-6 hidden md:flex items-center">
-
         {["Home", "About", "Review", "Features", "Contact"].map((item) => (
           <Link
             key={item}
             to={item}
             className="hover:text-[#838beb] hover:scale-110 transition duration-200 cursor-pointer"
-
             smooth={true}
             duration={500}
           >
