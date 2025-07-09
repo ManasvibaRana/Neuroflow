@@ -15,8 +15,6 @@ from dotenv import load_dotenv
 import os
 
 
-
-
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,6 +47,7 @@ INSTALLED_APPS = [
     'chatbot',
     'journal',
     'songs',
+    'journalmedia',
 ]
 
 MIDDLEWARE = [
@@ -136,3 +135,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
