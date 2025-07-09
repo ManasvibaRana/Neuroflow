@@ -25,4 +25,5 @@ urlpatterns = [
     path('api/chatbot/', include('chatbot.urls')),
     path("journal/", include("journal.urls")),  
     path('music/', include('songs.urls')), 
+    path("journalmedia/", include("journalmedia.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
