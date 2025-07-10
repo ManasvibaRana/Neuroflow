@@ -1,8 +1,7 @@
-
 export function isLoggedIn() {
-   return sessionStorage.getItem('token') !== null;
+  return sessionStorage.getItem("token") !== null;
 }
 
 export function logout() {
-  sessionStorage.removeItem('token');
+  sessionStorage.removeItem("token");
 }

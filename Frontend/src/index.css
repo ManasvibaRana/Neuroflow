@@ -30,3 +30,15 @@ body {
 .animate-scroll-reverse {
   animation: scroll-reverse 40s linear infinite;
 }
+
+/* Optional: smooth custom scroll */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #aaa;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

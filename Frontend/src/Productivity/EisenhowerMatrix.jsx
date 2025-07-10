@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+} from "react-beautiful-dnd";
 
 const quadrants = [
   { id: "1", title: "DO THIS", color: "bg-blue-100" },
@@ -9,11 +13,46 @@ const quadrants = [
 ];
 
 const motivationalQuotes = [
-  '"Small steps every day lead to big results."',
-  '"Your only limit is your mind."',
-  '"Push yourself, because no one else is going to do it for you."',
-  '"Dream it. Wish it. Do it."',
-  '"Success doesn\'t come from what you do occasionally. It comes from what you do consistently."',
+  "\"Small steps every day lead to big results.\"",
+  "\"Your only limit is your mind.\"",
+  "\"Push yourself, because no one else is going to do it for you.\"",
+  "\"Dream it. Wish it. Do it.\"",
+  "\"Success doesn't come from what you do occasionally. It comes from what you do consistently.\"",
+  "\"Stay focused and never give up.\"",
+  "\"You don’t have to be extreme, just consistent.\"",
+  "\"Believe in yourself and all that you are.\"",
+  "\"Discipline is the bridge between goals and accomplishment.\"",
+  "\"Your future is created by what you do today, not tomorrow.\"",
+  "\"Doubt kills more dreams than failure ever will.\"",
+  "\"Don’t watch the clock; do what it does. Keep going.\"",
+  "\"The secret of getting ahead is getting started.\"",
+  "\"Hard work beats talent when talent doesn’t work hard.\"",
+  "\"You are capable of amazing things.\"",
+  "\"Start where you are. Use what you have. Do what you can.\"",
+  "\"Success is not for the lazy.\"",
+  "\"Make today count.\"",
+  "\"Your time is now.\"",
+  "\"Progress, not perfection.\"",
+  "\"Success is the sum of small efforts repeated day in and day out.\"",
+  "\"The only way to do great work is to love what you do.\"",
+  "\"Be stronger than your excuses.\"",
+  "\"Every accomplishment starts with the decision to try.\"",
+  "\"Don’t wait for opportunity. Create it.\"",
+  "\"Don’t stop until you’re proud.\"",
+  "\"Push yourself because no one else is going to do it for you.\"",
+  "\"Your only limit is you.\"",
+  "\"You can do anything, but not everything.\"",
+  "\"It always seems impossible until it’s done.\"",
+  "\"Winners are not afraid of losing.\"",
+  "\"Stay positive, work hard, make it happen.\"",
+  "\"You didn’t come this far to only come this far.\"",
+  "\"Be so good they can’t ignore you.\"",
+  "\"Do something today that your future self will thank you for.\"",
+  "\"You are your only limit.\"",
+  "\"Success starts with self-discipline.\"",
+  "\"A little progress each day adds up to big results.\"",
+  "\"Keep going. Everything you need will come to you at the perfect time.\"",
+  "\"Don’t be afraid to give up the good to go for the great.\"",
 ];
 
 const EisenhowerMatrix = () => {
@@ -21,14 +60,11 @@ const EisenhowerMatrix = () => {
   const [newTask, setNewTask] = useState("");
   const [selectedQuadrant, setSelectedQuadrant] = useState("1");
   const [showTimeModal, setShowTimeModal] = useState(false);
-  const [tempTime, setTempTime] = useState({ h: "", m: "", s: "" });
+  const [tempTime, setTempTime] = useState({ h: "", m: "0" });
   const [quote, setQuote] = useState("");
   const [showTookModal, setShowTookModal] = useState(false);
-  const [tookTime, setTookTime] = useState({ h: "", m: "", s: "" });
-  const [currentToggledTask, setCurrentToggledTask] = useState({
-    id: null,
-    index: null,
-  });
+  const [tookTime, setTookTime] = useState({ h: "", m: "0" });
+  const [currentToggledTask, setCurrentToggledTask] = useState({ id: null, index: null });
 
   useEffect(() => {
     const random = Math.floor(Math.random() * motivationalQuotes.length);
@@ -36,34 +72,34 @@ const EisenhowerMatrix = () => {
   }, []);
 
   const isTimeValid = () =>
-    tempTime.h !== "" && tempTime.m !== "" && tempTime.s !== "";
+    tempTime.h !== "" && tempTime.m !== "";
 
   const formatTime = () =>
-    `${tempTime.h.padStart(2, "0")}:${tempTime.m.padStart(
-      2,
-      "0"
-    )}:${tempTime.s.padStart(2, "0")}`;
+    `${tempTime.h.padStart(2, "0")}:${tempTime.m.padStart(2, "0")}`;
 
-  const addTask = () => {
-    if (!newTask.trim()) return alert("Please enter a task.");
-    if (!isTimeValid()) return alert("Please set time.");
-    const formattedTime = formatTime();
-    setTasks((prev) => ({
-      ...prev,
-      [selectedQuadrant]: [
-        ...prev[selectedQuadrant],
-        {
-          text: newTask,
-          time: formattedTime,
-          completed: false,
-          took: null,
-        },
-      ],
-    }));
-    setNewTask("");
-    setTempTime({ h: "", m: "", s: "" });
-    setShowTimeModal(false);
-  };
+ const addTask = () => {
+  if (!newTask.trim()) return alert("Please enter a task.");
+  const { h, m } = tempTime;
+  if ((h === "0" || h === "") && (m === "0" || m === ""))
+    return alert("Please set a time greater than 0.");
+
+  const formattedTime = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+  setTasks((prev) => ({
+    ...prev,
+    [selectedQuadrant]: [
+      ...prev[selectedQuadrant],
+      {
+        text: newTask,
+        time: formattedTime,
+        completed: false,
+        took: null,
+      },
+    ],
+  }));
+  setNewTask("");
+  setTempTime({ h: "", m: "0" });
+  setShowTimeModal(false);
+};
 
   const deleteTask = (id, index) => {
     const updated = tasks[id].filter((_, i) => i !== index);
@@ -84,18 +120,16 @@ const EisenhowerMatrix = () => {
   };
 
   const confirmTookTime = () => {
-    const { h, m, s } = tookTime;
-    if (!h || !m || !s) return alert("Please enter full completion time.");
-    const formattedTook = `${h.padStart(2, "0")}:${m.padStart(
-      2,
-      "0"
-    )}:${s.padStart(2, "0")}`;
+    const { h, m } = tookTime;
+    if (!h || !m) return alert("Please enter full completion time.");
+
+    const formattedTook = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
     const { id, index } = currentToggledTask;
     const updated = [...tasks[id]];
     updated[index].completed = true;
     updated[index].took = formattedTook;
     setTasks({ ...tasks, [id]: updated });
-    setTookTime({ h: "", m: "", s: "" });
+    setTookTime({ h: "", m: "0" });
     setShowTookModal(false);
   };
 
@@ -123,8 +157,9 @@ const EisenhowerMatrix = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 font-mono bg-white min-h-screen relative">
-      <h1 className="text-3xl mb-2 font-bold mt-10">TO-DO List</h1>
+    <div className="flex flex-col items-center justify-center px-4 font-mono mt-1/8 bg-white min-h-screen relative"
+      style={{ backgroundColor: "#838beb/50" }}>
+      <h1 className="text-3xl mb-2 font-bold">TO-DO List</h1>
       <p className="text-sm text-gray-600 italic mb-4">{quote}</p>
 
       {/* Input Area */}
@@ -147,11 +182,9 @@ const EisenhowerMatrix = () => {
 
           {showTimeModal && (
             <div className="absolute top-full mt-1 left-0 z-10 bg-white border p-4 rounded shadow-md">
-              <h3 className="text-sm font-semibold mb-2">
-                Set Time (HH:MM:SS)
-              </h3>
+              <h3 className="text-sm font-semibold mb-2">Set Time (HH:MM)</h3>
               <div className="flex gap-2 items-center">
-                {["h", "m", "s"].map((unit) => (
+                {["h", "m"].map((unit) => (
                   <input
                     key={unit}
                     type="number"
@@ -201,7 +234,7 @@ const EisenhowerMatrix = () => {
 
       {/* Axis Labels */}
       <div className="relative max-w-5xl w-full mt-10">
-        <div className="absolute top-[-4.5rem] left-0 right-0 flex justify-center text-sm font-semibold mt-6">
+        <div className="hidden md:flex absolute top-[-4.5rem] left-0 right-0 justify-center text-sm font-semibold mt-6">
           <div className="flex justify-around w-full max-w-4xl">
             <div className="bg-gray-200 p-2 rounded-md w-1/2 text-center mr-2">
               Urgent
@@ -211,7 +244,8 @@ const EisenhowerMatrix = () => {
             </div>
           </div>
         </div>
-        <div className="absolute top-0 bottom-0 -left-12 flex flex-col justify-between text-sm font-semibold h-full py-1">
+
+        <div className="hidden md:flex absolute top-0 bottom-0 left-0 flex-col justify-between text-sm font-semibold h-full py-1 translate-x-[-3rem]">
           <div className="bg-gray-200 p-2 py-2 rounded-md transform -rotate-90 origin-top-left whitespace-nowrap mt-44 text-center px-12">
             Important
           </div>
@@ -220,18 +254,19 @@ const EisenhowerMatrix = () => {
           </div>
         </div>
 
+        {/* Task Grid */}
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-2 grid-rows-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4">
             {quadrants.map((q) => (
               <Droppable droppableId={q.id} key={q.id}>
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={`p-4 border ${q.color} flex flex-col min-h-[200px] rounded-lg`}
+                    className={`p-4 border ${q.color} flex flex-col h-[200px] rounded-lg`}
                   >
                     <h2 className="text-xl font-bold mb-2">{q.title}</h2>
-                    <div className="flex-1 overflow-y-auto pr-1 max-h-60">
+                    <div className="overflow-y-auto pr-1 flex-1 custom-scrollbar">
                       <ul className="flex flex-col gap-1">
                         {tasks[q.id].map((task, index) => (
                           <Draggable
@@ -253,19 +288,17 @@ const EisenhowerMatrix = () => {
                                     onChange={() => toggleTask(q.id, index)}
                                   />
                                   <span
-                                    className={`$${
-                                      task.completed
-                                        ? "line-through text-gray-500"
-                                        : ""
-                                    } break-all`}
+                                    className={`${
+                                      task.completed ? "line-through text-gray-500" : ""
+                                    } break-all mr-4`}
                                   >
                                     {task.text}
                                   </span>
-                                  <span className="text-xs text-gray-600 whitespace-nowrap">
+                                  <span className="text-xs text-gray-600 whitespace-nowrap mr-2">
                                     ⏰ {task.time}
                                   </span>
                                   {task.completed && task.took && (
-                                    <span className="text-xs text-gray-600 whitespace-nowrap">
+                                    <span className="text-xs text-gray-600 whitespace-nowrap mr-2">
                                       🕓 Took: {task.took}
                                     </span>
                                   )}
@@ -293,13 +326,11 @@ const EisenhowerMatrix = () => {
 
       {/* Modal for Took Time */}
       {showTookModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+        <div className="fixed inset-0 flex justify-center items-center z-50">
           <div className="bg-white p-4 rounded shadow-md">
-            <h3 className="text-lg font-semibold mb-2">
-              How long did it take?
-            </h3>
-            <div className="flex gap-2 items-center mb-4">
-              {["h", "m", "s"].map((unit) => (
+            <h3 className="text-lg font-semibold mb-2">How long did it take?</h3>
+            <div className="flex gap-2 items-center mb-4 center">
+              {["h", "m"].map((unit) => (
                 <input
                   key={unit}
                   type="number"
@@ -317,7 +348,7 @@ const EisenhowerMatrix = () => {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => {
-                  setTookTime({ h: "", m: "", s: "" });
+                  setTookTime({ h: "", m: "" });
                   setShowTookModal(false);
                 }}
                 className="px-4 py-1 bg-gray-300 rounded"

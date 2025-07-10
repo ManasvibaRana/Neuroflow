@@ -1,130 +1,162 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import Lottie from "lottie-react";
+import brainbot from "./Images/Brainbot.json";
 
-const Login = () => {     
+const Login = () => {
   const [formData, setFormData] = useState({ userid: "", password: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from || "/journal";  
+  const from = location.state?.from || "/journal";
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  const { userid, password } = formData;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const { userid, password } = formData;
 
-  if (!userid || !password) {
-    setError("All fields are required.");
-    return;
-  }
+    if (!userid || !password) {
+      setError("All fields are required.");
+      return;
+    }
 
-  try {
-    const res = await fetch("http://localhost:8000/api/login/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ userid, password }),
-    });
+    try {
+      const res = await fetch("http://localhost:8000/api/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userid, password }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-   if (res.ok) {
-      setError("");
-      sessionStorage.setItem("token", data.token);
-      sessionStorage.setItem("userid", data.userid); // ✅ Add this line
-      alert("Login Successful!");
-      console.log("🧑 User ID:", sessionStorage.getItem("userid"));
+      if (res.ok) {
+        setError("");
+        sessionStorage.setItem("token", data.token);
+        sessionStorage.setItem("userid", data.userid);
+        alert("Login Successful!");
 
+        const pendingText = sessionStorage.getItem("pending_journal");
+        const pendingAnalysis = sessionStorage.getItem("pending_analysis");
 
-      // ✅ Step: Check and save any pending journal
-      const pendingText = sessionStorage.getItem("pending_journal");
-      const pendingAnalysis = sessionStorage.getItem("pending_analysis");
+        if (pendingText && pendingAnalysis) {
+          await fetch("http://localhost:8000/journal/save/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${data.token}`,
+            },
+            body: JSON.stringify({
+              userid: data.userid,
+              text: pendingText,
+              analysis: JSON.parse(pendingAnalysis),
+            }),
+          });
 
-     if (pendingText && pendingAnalysis) {
-      try {
-        console.log("💾 Auto-saving journal with:", {
-          userid: data.userid,
-          text: pendingText,
-          analysis: JSON.parse(pendingAnalysis),
-        });
+          sessionStorage.removeItem("pending_journal");
+          sessionStorage.removeItem("pending_analysis");
+        }
 
-        await fetch("http://localhost:8000/journal/save/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${data.token}`,
-          },
-          body: JSON.stringify({
-            userid: data.userid, // make sure to send userid here
-            text: pendingText,
-            analysis: JSON.parse(pendingAnalysis),
-          }),
-        });
-
-        sessionStorage.removeItem("pending_journal");
-        sessionStorage.removeItem("pending_analysis");
-      } catch (saveError) {
-        console.error("❌ Failed to auto-save journal after login:", saveError);
+        navigate(from, { replace: true });
+      } else {
+        setError(data.error || "Login failed");
       }
+    } catch {
+      setError("Something went wrong. Please try again.");
     }
-
-
-      // ✅ Redirect back to where user came from
-      navigate(from, { replace: true });
-    } else {
-      setError(data.error || "Login failed");
-    }
-  } catch (err) {
-    setError("Something went wrong. Please try again.");
-  }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-b from-white to-gray-100 px-4">
-      <div className="w-full max-w-sm bg-indigo-100/30 rounded-3xl shadow-lg border-4 border-white p-6">
-        <h2 className="text-2xl font-bold text-center text-indigo-600">Login</h2>
+    <div className="relative overflow-hidden bg-[#f9f9fc]">
+      {/* Top-right Privacy & Terms */}
+      <div className="absolute top-6 right-6 z-20 flex gap-4 text-white text-sm">
+        <button
+          className="hover:underline"
+          onClick={() => navigate("/privacy")}
+        >
+          Privacy
+        </button>
+        <button className="hover:underline" onClick={() => navigate("/terms")}>
+          Terms
+        </button>
+      </div>
 
-        {error && (
-          <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
-        )}
+      {/* Top-Left Brand */}
+      <div className="absolute top-6 left-6 z-20">
+        <h1 className="text-gray-800 text-2xl font-bold">NeuroFlow</h1>
+      </div>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="userid"
-            placeholder="User ID or Email"
-            value={formData.userid}
-            onChange={handleChange}
-            className="w-full p-3 rounded-xl border border-transparent shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-gray-400"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full p-3 rounded-xl border border-transparent shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-gray-400"
-          />
-          <button
-            type="submit"
-            className="w-full py-3 bg-gradient-to-r from-indigo-400 to-indigo-600 text-white font-semibold rounded-xl shadow-md hover:scale-105 transition-transform"
-          >
-            Login
-          </button>
-        </form>
+      {/* Purple Background Curve (on Right side now) */}
+      <div className="absolute w-[117%] h-[220%] bg-gradient-to-tr from-[#796fc1] to-[#838beb] rounded-l-[50%] -right-1/2 -bottom-1/3 z-0" />
 
-        <p className="mt-4 text-center text-sm text-gray-600">
-          New user?{" "}
-          <button
-            onClick={() => navigate("/signup")}
-            className="text-indigo-600 font-medium hover:underline"
-          >
-            Create Account
-          </button>
-        </p>
+      <div className="relative z-10 flex min-h-screen">
+        {/* Left Form Section */}
+        <div className="w-1/2 flex justify-end items-center mt-20 pr-10">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 pt-12 relative">
+            {/* Brain animation on top */}
+            <div className="absolute -top-16 left-1/2 transform -translate-x-1/2">
+              <Lottie animationData={brainbot} loop className="w-32 h-32" />
+            </div>
+
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">
+              Login
+            </h2>
+
+            {error && (
+              <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
+            )}
+
+            <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
+              <input
+                type="text"
+                name="userid"
+                placeholder="User ID or Email"
+                value={formData.userid}
+                onChange={handleChange}
+                className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#838ebe] placeholder-gray-500"
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#838ebe] placeholder-gray-500"
+              />
+              <button
+                type="submit"
+                className="w-full py-3 bg-gradient-to-tr from-[#796fc1] to-[#838ebe] text-white font-semibold rounded-xl hover:scale-105 transition-transform shadow-md"
+              >
+                Login
+              </button>
+            </form>
+
+            <p className="mt-4 text-center text-sm text-gray-600">
+              New user?{" "}
+              <button
+                onClick={() => navigate("/signup")}
+                className="text-[#5762E4] font-medium hover:underline"
+              >
+                Create Account
+              </button>
+            </p>
+          </div>
+        </div>
+
+        {/* Right Purple Text Section */}
+        <div className="w-1/2 relative flex flex-col justify-center pl-5 pr-20 text-white">
+          <div className="z-10 ml-20">
+            <h2 className="text-4xl font-bold leading-snug mb-2">
+              Welcome back to <br />
+              Neuroflow
+            </h2>
+            <p className="text-lg opacity-90">
+              Your thoughts matter. Continue your journey of self-reflection and
+              productivity.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

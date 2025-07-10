@@ -1,4 +1,10 @@
 from transformers import pipeline
+import nltk
+from nltk.tokenize.punkt import PunktSentenceTokenizer, PunktParameters
+
+punkt_params = PunktParameters()
+tokenizer = PunktSentenceTokenizer(punkt_params)
+
 
 emotion_classifier = pipeline(
     "text-classification",
@@ -6,17 +12,17 @@ emotion_classifier = pipeline(
     top_k=None
 )
 
+
 def analyze_journal(journal_text, score_threshold=0.1):
     sentence_emotions = []
     aggregated_scores = {}
 
-    sentences = journal_text.split(".")
+    # Smart sentence splitting
+    sentences = [s.strip() for s in tokenizer.tokenize(journal_text) if s.strip()]
+
 
     for sentence in sentences:
-        sentence = sentence.strip()
-        if not sentence:
-            continue
-
+        print(sentence)
         emotion_scores = emotion_classifier(sentence)[0]
         sentence_top = max(emotion_scores, key=lambda x: x['score'])
 
@@ -38,8 +44,8 @@ def analyze_journal(journal_text, score_threshold=0.1):
     }
 
     sorted_emotions = sorted(normalized_scores.items(), key=lambda x: x[1], reverse=True)
-
     top_emotion = sorted_emotions[0][0]
+
     representative_sentences = [
         item["sentence"] for item in sentence_emotions
         if item["top_emotion"] == top_emotion
@@ -47,6 +53,5 @@ def analyze_journal(journal_text, score_threshold=0.1):
 
     return {
         "sorted_emotions": sorted_emotions[:3],
-        "top_emotion_sentences": ". ".join(representative_sentences),
+        "top_emotion_sentences": " ".join(representative_sentences),
     }
-    
