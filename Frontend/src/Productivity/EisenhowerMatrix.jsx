@@ -78,15 +78,17 @@ const EisenhowerMatrix = () => {
       const data = await res.json();
       const grouped = { 1: [], 2: [], 3: [], 4: [] };
       data.forEach((task) => {
-        const qid = getQuadrantId(task.type_of_task);
-        grouped[qid].push({
-          id: task.id,
-          text: task.task,
-          time: formatDuration(task.ideal_time),
-          completed: task.status,
-          took: task.taken_time !== "PT0H0M" ? formatDuration(task.taken_time) : null,
-        });
+      console.log("Task:", task.task, "| ideal_time:", task.ideal_time);
+      const qid = getQuadrantId(task.type_of_task);
+      grouped[qid].push({
+        id: task.id,
+        text: task.task,
+        time: formatDuration(task.ideal_time),
+        completed: task.status,
+        took: task.taken_time !== "PT0H0M" ? formatDuration(task.taken_time) : null,
       });
+    });
+
       setTasks(grouped);
     } catch (err) {
       console.error(err);
@@ -113,14 +115,17 @@ const EisenhowerMatrix = () => {
     }
   };
 
-  const formatDuration = (iso) => {
-    const match = iso.match(/PT(\d+)H(\d+)M/);
-    if (match) {
-      const [, h, m] = match;
-      return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
-    }
-    return "00:00";
-  };
+const formatDuration = (iso) => {
+  if (!iso) return "00:00";
+  const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+  if (match) {
+    const h = match[1] ? match[1] : "0";
+    const m = match[2] ? match[2] : "0";
+    return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+  }
+  return "00:00";
+};
+
 
   const isTimeValid = () => tempTime.h !== "" && tempTime.m !== "";
 
@@ -381,32 +386,32 @@ const EisenhowerMatrix = () => {
                           >
                             {(provided) => (
                              <li
-  ref={provided.innerRef}
-  {...provided.draggableProps}
-  {...provided.dragHandleProps}
-  className="relative flex items-center bg-white p-2 rounded shadow-sm text-sm"
->
-  <input
-    type="checkbox"
-    checked={task.completed}
-    onChange={() => toggleTask(q.id, index)}
-  />
-  <span className={`ml-2 ${task.completed ? "line-through text-gray-500" : ""}`}>
-    {task.text}
-  </span>
-  <span className="text-xs text-gray-600 ml-2">⏰ {task.time}</span>
-  {task.completed && task.took && (
-    <span className="text-xs text-gray-600 ml-2">
-      🕓 Took: {task.took}
-    </span>
-  )}
-  <button
-    onClick={() => deleteTask(q.id, index)}
-    className="ml-auto text-red-600 font-bold"
-  >
-    ✕
-  </button>
-</li>
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className="relative flex items-center bg-white p-2 rounded shadow-sm text-sm"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={task.completed}
+                                onChange={() => toggleTask(q.id, index)}
+                              />
+                              <span className={`ml-2 ${task.completed ? "line-through text-gray-500" : ""}`}>
+                                {task.text}
+                              </span>
+                              <span className="text-xs text-gray-600 ml-2">⏰ {task.time}</span>
+                              {task.completed && task.took && (
+                                <span className="text-xs text-gray-600 ml-2">
+                                  🕓 Took: {task.took}
+                                </span>
+                              )}
+                              <button
+                                onClick={() => deleteTask(q.id, index)}
+                                className="ml-auto text-red-600 font-bold"
+                              >
+                                ✕
+                              </button>
+                            </li>
 
                             )}
                           </Draggable>

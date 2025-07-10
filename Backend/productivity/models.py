@@ -2,6 +2,7 @@ from django.utils import timezone
 from django.db import models
 from django.db import models
 from users.models import User  
+import math
 
 class Productivity(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -34,5 +35,5 @@ class Productivity(models.Model):
         if not self.day:
             self.day = timezone.now().strftime("%A")
         if self.ideal_time and self.taken_time:
-            self.net_time = self.taken_time - self.ideal_time
+            self.net_time = self.ideal_time - self.taken_time 
         super().save(*args, **kwargs)
