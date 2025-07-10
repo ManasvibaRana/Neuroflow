@@ -8,6 +8,7 @@ import J1 from "./Journal/JournalForm";
 import Pomodo from "./Pomodo/Pomodo";
 import UserDashboard from "./Dashboard/UserDashboard";
 import Activity from "./Activity/ActivityPage"
+import PendingTasks from "./Productivity/PendingTasks";
 
 
 import { BrowserRouter, Routes,Route,
@@ -41,7 +42,7 @@ export function App() {
           <Route path="/pomodo" element={<Pomodo />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/activity" element={<Activity />} />
-
+          <Route path="/pending-tasks" element={<PendingTasks />} />
           <Route path="/productivity" element={<Productivity />} />
           <Route path="/dashboard" element={<UserDashboard />} />
         </Route>
