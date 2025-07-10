@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'journal',
     'songs',
     'journalmedia',
+    'productivity',
 ]
 
 MIDDLEWARE = [

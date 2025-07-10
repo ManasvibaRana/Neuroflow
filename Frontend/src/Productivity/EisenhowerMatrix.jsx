@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DragDropContext,
   Droppable,
@@ -69,41 +69,127 @@ const EisenhowerMatrix = () => {
   useEffect(() => {
     const random = Math.floor(Math.random() * motivationalQuotes.length);
     setQuote(motivationalQuotes[random]);
+    fetchTasks();
   }, []);
 
-  const isTimeValid = () =>
-    tempTime.h !== "" && tempTime.m !== "";
+  const fetchTasks = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/productivity/");
+      const data = await res.json();
+      const grouped = { 1: [], 2: [], 3: [], 4: [] };
+      data.forEach((task) => {
+        const qid = getQuadrantId(task.type_of_task);
+        grouped[qid].push({
+          id: task.id,
+          text: task.task,
+          time: formatDuration(task.ideal_time),
+          completed: task.status,
+          took: task.taken_time !== "PT0H0M" ? formatDuration(task.taken_time) : null,
+        });
+      });
+      setTasks(grouped);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  const formatTime = () =>
-    `${tempTime.h.padStart(2, "0")}:${tempTime.m.padStart(2, "0")}`;
+  const getQuadrantId = (type) => {
+    switch (type) {
+      case "DO": return "1";
+      case "DECIDE": return "2";
+      case "DELEGATE": return "3";
+      case "DELETE": return "4";
+      default: return "1";
+    }
+  };
 
- const addTask = () => {
-  if (!newTask.trim()) return alert("Please enter a task.");
-  const { h, m } = tempTime;
-  if ((h === "0" || h === "") && (m === "0" || m === ""))
-    return alert("Please set a time greater than 0.");
+  const getTypeLabel = (id) => {
+    switch (id) {
+      case "1": return "DO";
+      case "2": return "DECIDE";
+      case "3": return "DELEGATE";
+      case "4": return "DELETE";
+      default: return "DO";
+    }
+  };
 
-  const formattedTime = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
-  setTasks((prev) => ({
-    ...prev,
-    [selectedQuadrant]: [
-      ...prev[selectedQuadrant],
-      {
-        text: newTask,
-        time: formattedTime,
-        completed: false,
-        took: null,
-      },
-    ],
-  }));
-  setNewTask("");
-  setTempTime({ h: "", m: "0" });
-  setShowTimeModal(false);
-};
+  const formatDuration = (iso) => {
+    const match = iso.match(/PT(\d+)H(\d+)M/);
+    if (match) {
+      const [, h, m] = match;
+      return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+    }
+    return "00:00";
+  };
 
-  const deleteTask = (id, index) => {
-    const updated = tasks[id].filter((_, i) => i !== index);
-    setTasks({ ...tasks, [id]: updated });
+  const isTimeValid = () => tempTime.h !== "" && tempTime.m !== "";
+
+  const addTask = async () => {
+    if (!newTask.trim()) return alert("Please enter a task.");
+    const { h, m } = tempTime;
+    if ((h === "0" || h === "") && (m === "0" || m === ""))
+      return alert("Please set a time greater than 0.");
+
+    const today = new Date();
+    const formattedDate = today.toISOString().split("T")[0];
+
+
+    const payload = {
+      user: sessionStorage.getItem("userid"), // 🟢 TODO: replace with logged-in user ID
+      task: newTask,
+      type_of_task: getTypeLabel(selectedQuadrant),
+      ideal_time: `PT${parseInt(h)}H${parseInt(m)}M`,
+      taken_time: "PT0H0M",
+      status: false,
+      date: formattedDate,
+     
+      score: 0,
+      reflection: ""
+    };
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/productivity/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error("Failed to add task.");
+
+      const data = await response.json();
+      console.log("DATA FROM BACKEND:", data);
+
+      setTasks((prev) => ({
+        ...prev,
+        [selectedQuadrant]: [
+          ...prev[selectedQuadrant],
+          {
+            id: data.id,
+            text: newTask,
+            time: formatDuration(payload.ideal_time),
+            completed: false,
+            took: null,
+          },
+        ],
+      }));
+      setNewTask("");
+      setTempTime({ h: "", m: "0" });
+      setShowTimeModal(false);
+    } catch (err) {
+      console.error(err);
+      alert("Error adding task.");
+    }
+  };
+
+  const deleteTask = async (id, index) => {
+    const task = tasks[id][index];
+    try {
+      await fetch(`http://127.0.0.1:8000/productivity/${task.id}/`, { method: "DELETE" });
+      const updated = tasks[id].filter((_, i) => i !== index);
+      setTasks({ ...tasks, [id]: updated });
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting task.");
+    }
   };
 
   const toggleTask = (id, index) => {
@@ -112,6 +198,7 @@ const EisenhowerMatrix = () => {
       setCurrentToggledTask({ id, index });
       setShowTookModal(true);
     } else {
+      updateTaskStatus(task.id, false, "PT0H0M");
       const updated = [...tasks[id]];
       updated[index].completed = false;
       updated[index].took = null;
@@ -119,15 +206,32 @@ const EisenhowerMatrix = () => {
     }
   };
 
-  const confirmTookTime = () => {
+  const updateTaskStatus = async (taskId, status, tookDuration) => {
+    const payload = { status: status, taken_time: tookDuration };
+    try {
+      await fetch(`http://127.0.0.1:8000/productivity/${taskId}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const confirmTookTime = async () => {
     const { h, m } = tookTime;
     if (!h || !m) return alert("Please enter full completion time.");
 
-    const formattedTook = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+    const tookDuration = `PT${parseInt(h)}H${parseInt(m)}M`;
     const { id, index } = currentToggledTask;
+    const task = tasks[id][index];
+
+    await updateTaskStatus(task.id, true, tookDuration);
+
     const updated = [...tasks[id]];
     updated[index].completed = true;
-    updated[index].took = formattedTook;
+    updated[index].took = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
     setTasks({ ...tasks, [id]: updated });
     setTookTime({ h: "", m: "0" });
     setShowTookModal(false);
@@ -156,6 +260,7 @@ const EisenhowerMatrix = () => {
     }
   };
 
+  // Your full return stays SAME — unchanged styles
   return (
     <div className="flex flex-col items-center justify-center px-4 font-mono mt-1/8 bg-white min-h-screen relative"
       style={{ backgroundColor: "#838beb/50" }}>
@@ -275,41 +380,34 @@ const EisenhowerMatrix = () => {
                             index={index}
                           >
                             {(provided) => (
-                              <li
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className="relative flex items-center justify-between bg-white p-2 rounded shadow-sm text-sm"
-                              >
-                                <div className="flex items-center gap-2 w-full">
-                                  <input
-                                    type="checkbox"
-                                    checked={task.completed}
-                                    onChange={() => toggleTask(q.id, index)}
-                                  />
-                                  <span
-                                    className={`${
-                                      task.completed ? "line-through text-gray-500" : ""
-                                    } break-all mr-4`}
-                                  >
-                                    {task.text}
-                                  </span>
-                                  <span className="text-xs text-gray-600 whitespace-nowrap mr-2">
-                                    ⏰ {task.time}
-                                  </span>
-                                  {task.completed && task.took && (
-                                    <span className="text-xs text-gray-600 whitespace-nowrap mr-2">
-                                      🕓 Took: {task.took}
-                                    </span>
-                                  )}
-                                  <button
-                                    onClick={() => deleteTask(q.id, index)}
-                                    className="text-red-600 font-bold"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              </li>
+                             <li
+  ref={provided.innerRef}
+  {...provided.draggableProps}
+  {...provided.dragHandleProps}
+  className="relative flex items-center bg-white p-2 rounded shadow-sm text-sm"
+>
+  <input
+    type="checkbox"
+    checked={task.completed}
+    onChange={() => toggleTask(q.id, index)}
+  />
+  <span className={`ml-2 ${task.completed ? "line-through text-gray-500" : ""}`}>
+    {task.text}
+  </span>
+  <span className="text-xs text-gray-600 ml-2">⏰ {task.time}</span>
+  {task.completed && task.took && (
+    <span className="text-xs text-gray-600 ml-2">
+      🕓 Took: {task.took}
+    </span>
+  )}
+  <button
+    onClick={() => deleteTask(q.id, index)}
+    className="ml-auto text-red-600 font-bold"
+  >
+    ✕
+  </button>
+</li>
+
                             )}
                           </Draggable>
                         ))}

@@ -26,4 +26,5 @@ urlpatterns = [
     path("journal/", include("journal.urls")),  
     path('music/', include('songs.urls')), 
     path("journalmedia/", include("journalmedia.urls")),
+    path("productivity/", include('productivity.urls'),name='productivity'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

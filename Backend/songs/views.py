@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from .models import Song   # ✅ Correct import!
+from .models import Song   
 
 def get_songs(request):
     songs = Song.objects.all()
