@@ -14,7 +14,7 @@ class ISO8601DurationField(serializers.DurationField):
 class ProductivitySerializer(serializers.ModelSerializer):
     ideal_time = ISO8601DurationField()
     taken_time = ISO8601DurationField()
-    net_time = ISO8601DurationField()
+ 
 
     class Meta:
         model = Productivity
