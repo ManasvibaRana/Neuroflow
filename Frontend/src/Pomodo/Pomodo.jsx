@@ -3,6 +3,7 @@ import Timer from './Timer';
 import Pomodoro from './Pomodoro';
 import MusicPlayer from './MusicPlayer';
 import Navbar from '../Navbar';
+import ChatButton from '../Chat/ChatButton';
 
 
 function Pomodo() {
@@ -62,6 +63,7 @@ function Pomodo() {
           </div>
         </div>
       )}
+      <ChatButton/>
     </div>
     </>
   );

@@ -6,7 +6,7 @@ import VoiceInputButton from "./VoiceInputButton";
 import JournalAnalysis from "./JournalAnalysis";
 import AudioPlayer from "./AudioPlayer";
 import { useNavigate } from "react-router-dom";
-
+import ChatButton from '../Chat/ChatButton';
 const emotionEmojis = [
   { emotion: "Joy", emoji: "😊" },
   { emotion: "Sadness", emoji: "😢" },
@@ -643,7 +643,9 @@ export default function JournalForm() {
               </ModalCard>
             </PolaroidModal>
           )}
+          <ChatButton/>
       </Main>
+    
     </ThemeProvider>
   );
 }

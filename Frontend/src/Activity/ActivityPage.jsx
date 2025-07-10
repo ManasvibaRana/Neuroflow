@@ -5,6 +5,8 @@ import Navbar from "../Navbar";
 import NumberFocus from "./NumberFocus";
 import QuickReaction from "./QuickReaction";
 import TypingBurst from "./TypingBurst";
+import ChatButton from '../Chat/ChatButton';
+
 
 export default function ActivityPage() {
   return (
@@ -21,6 +23,7 @@ export default function ActivityPage() {
         <NumberFocus/>
         <QuickReaction/>
         <BrainTeaser />
+        <ChatButton/>
        
       </div>
     </div>

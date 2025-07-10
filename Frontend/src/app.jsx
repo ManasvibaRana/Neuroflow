@@ -7,14 +7,10 @@ import Productivity from "./Productivity/Productivity";
 import J1 from "./Journal/JournalForm";
 import Pomodo from "./Pomodo/Pomodo";
 import UserDashboard from "./Dashboard/UserDashboard";
-import Chatbot from "./Chat/ChatButton";
 import Activity from "./Activity/ActivityPage"
 
 
-import {
-  BrowserRouter,
-  Routes,
-  Route,
+import { BrowserRouter, Routes,Route,
   Navigate,
   Outlet,
   useLocation,
@@ -50,7 +46,7 @@ export function App() {
           <Route path="/dashboard" element={<UserDashboard />} />
         </Route>
       </Routes>
-      <Chatbot />
+    
     </BrowserRouter>
   );
 }
