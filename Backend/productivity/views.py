@@ -18,14 +18,16 @@ class ProductivityViewSet(viewsets.ModelViewSet):
         if user:
             queryset = queryset.filter(user__userid=user)
 
-        # If ?pending=true → show only past incomplete tasks
         if self.request.query_params.get('pending') == 'true':
+            # show only past incomplete tasks
             queryset = queryset.filter(status=False, date__lt=today)
-        else:
-            # Default: show only today's tasks
+        elif self.request.query_params.get('today') == 'true':
+            # show only today's tasks
             queryset = queryset.filter(date=today)
+        # else: return ALL tasks for the user
 
         return queryset
+
 
     def create(self, request, *args, **kwargs):
         print("POST DATA:", request.data)
