@@ -218,7 +218,7 @@ const EisenhowerMatrix = () => {
 
   const confirmTookTime = async () => {
     const { h, m } = tookTime;
-    if (!h || !m) return alert("Please enter full completion time.");
+    if ((!h || !m)  || (h<=0 && m<=0)) return alert("Please enter full completion time.");
     const tookDuration = `PT${parseInt(h)}H${parseInt(m)}M`;
     const { id, index } = currentToggledTask;
     const task = tasks[id][index];

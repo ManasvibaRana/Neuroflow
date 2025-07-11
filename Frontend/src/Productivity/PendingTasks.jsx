@@ -99,7 +99,7 @@ const PendingTasks = () => {
 
   const confirmTookTime = async () => {
     const { h, m } = tookTime;
-    if (!h || !m) {
+    if ((!h || !m) || (h<=0 && m<=0)) {
       alert("Please enter time.");
       return;
     }
@@ -114,7 +114,7 @@ const PendingTasks = () => {
     updated[index].completed = true;
     setTasks({ ...tasks, [id]: updated });
 
-    // Wait 5 sec → then remove
+    // Wait 3 sec → then remove
     setTimeout(() => {
       const removed = [...updated];
       removed.splice(index, 1);
