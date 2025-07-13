@@ -1,6 +1,5 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework import status
 from django.utils import timezone
 
 from .models import Productivity
@@ -19,15 +18,11 @@ class ProductivityViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(user__userid=user)
 
         if self.request.query_params.get('pending') == 'true':
-            # show only past incomplete tasks
             queryset = queryset.filter(status=False, date__lt=today)
         elif self.request.query_params.get('today') == 'true':
-            # show only today's tasks
             queryset = queryset.filter(date=today)
-        # else: return ALL tasks for the user
 
         return queryset
-
 
     def create(self, request, *args, **kwargs):
         print("POST DATA:", request.data)
@@ -37,3 +32,20 @@ class ProductivityViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        # If marking complete: recalculate net_time & score
+        if serializer.validated_data.get('status') == True:
+            instance.taken_time = serializer.validated_data.get('taken_time', instance.taken_time)
+            instance.net_time = instance.ideal_time - instance.taken_time
+            instance.status = True
+            instance.calculate_score()
+            instance.save()
+
+        self.perform_update(serializer)
+        return Response(serializer.data)

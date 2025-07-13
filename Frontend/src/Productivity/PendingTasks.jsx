@@ -26,7 +26,7 @@ const PendingTasks = () => {
 
   const fetchPendingTasks = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/productivity/?pending=true&user=Manu");
+      const res = await fetch("http://127.0.0.1:8000/productivity/?pending=true&user="+sessionStorage.getItem("userid"));
       const data = await res.json();
       console.log("Fetched pending tasks:", data);
 
@@ -42,6 +42,7 @@ const PendingTasks = () => {
             date: task.date,
             time: formatDuration(task.ideal_time),
             completed: false,
+            score: task.score,
           });
         }
       });
@@ -68,6 +69,24 @@ const PendingTasks = () => {
     }
   };
 
+  const calculateScore = (ideal, took) => {
+  const [idealH, idealM] = ideal.split(":").map(Number);
+  const [tookH, tookM] = took.split(":").map(Number);
+  const idealMins = idealH * 60 + idealM;
+  const tookMins = tookH * 60 + tookM;
+  if (idealMins === 0) return 0;
+  let ratio = tookMins / idealMins;
+  let score = 0;
+  if (ratio <= 1) {
+    score = 100 - ratio * 50; // 100% if faster, lower if slower
+  } else {
+    score = 100 - ratio * 50;
+    if (score < 0) score = 0;
+  }
+  return Math.round(score);
+};
+
+
   const formatDuration = (iso) => {
     if (!iso) return "00:00";
     const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
@@ -84,79 +103,95 @@ const PendingTasks = () => {
     setShowTookModal(true);
   };
 
-  const updateTaskStatus = async (taskId, tookDuration) => {
-    const payload = { status: true, taken_time: tookDuration };
-    try {
-      await fetch(`http://127.0.0.1:8000/productivity/${taskId}/`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } catch (err) {
-      console.error(err);
-    }
+  const updateTaskStatus = async (taskId, tookDuration, idealTime, score) => {
+  const payload = { 
+    status: true, 
+    taken_time: tookDuration,
+    score: score
   };
+  try {
+    await fetch(`http://127.0.0.1:8000/productivity/${taskId}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return payload; // so caller can use payload.score!
+  } catch (err) {
+    console.error(err);
+  }
+};
 
-  const confirmTookTime = async () => {
-    const { h, m } = tookTime;
-    if ((!h || !m) || (h<=0 && m<=0)) {
-      alert("Please enter time.");
-      return;
+
+ const confirmTookTime = async () => {
+  const { h, m } = tookTime;
+  if ((!h || !m) || (h <= 0 && m <= 0)) {
+    alert("Please enter time.");
+    return;
+  }
+
+  const { id, index } = currentToggledTask;
+
+  const tookDuration = `PT${parseInt(h)}H${parseInt(m)}M`;
+  const tookForScore = `${h}:${m}`; // "HH:MM"
+  const idealTime = tasks[id][index].time;
+
+  const score = calculateScore(idealTime, tookForScore);
+
+  // ✅ Mark as done in DB
+  await updateTaskStatus(tasks[id][index].id, tookDuration, idealTime, score);
+
+  // ✅ Mark as done visually
+  const updated = [...tasks[id]];
+  updated[index].completed = true;
+  updated[index].score = score;
+
+  setTasks({ ...tasks, [id]: updated });
+
+  // ✅ Wait 3 sec → then remove
+  setTimeout(() => {
+    const removed = [...updated];
+    removed.splice(index, 1);
+    const newTasks = { ...tasks, [id]: removed };
+    setTasks(newTasks);
+
+    const totalLeft = Object.values(newTasks).flat().length;
+    if (totalLeft === 0) {
+      navigate("/productivity");
     }
-    const tookDuration = `PT${parseInt(h)}H${parseInt(m)}M`;
-    const { id, index } = currentToggledTask;
+  }, 3000);
 
-    // Mark as done in DB
-    await updateTaskStatus(tasks[id][index].id, tookDuration);
+  setShowTookModal(false);
+  setTookTime({ h: "", m: "0" });
+};
 
-    // Mark as done visually
-    const updated = [...tasks[id]];
-    updated[index].completed = true;
-    setTasks({ ...tasks, [id]: updated });
+const onDragEnd = (result) => {
+  const { source, destination } = result;
+  if (!destination) return;
 
-    // Wait 3 sec → then remove
-    setTimeout(() => {
-      const removed = [...updated];
-      removed.splice(index, 1);
-      const newTasks = { ...tasks, [id]: removed };
-      setTasks(newTasks);
+  const srcId = source.droppableId;
+  const destId = destination.droppableId;
 
-      const totalLeft = Object.values(newTasks).flat().length;
-      if (totalLeft === 0) {
-        navigate("/productivity");
-      }
-    }, 3000);
+  const sourceTasks = [...tasks[srcId]];
+  const [removed] = sourceTasks.splice(source.index, 1);
 
-    setShowTookModal(false);
-    setTookTime({ h: "", m: "0" });
-  };
-
-  const onDragEnd = (result) => {
-    const { source, destination } = result;
-    if (!destination) return;
-
-    const srcId = source.droppableId;
-    const destId = destination.droppableId;
-    const sourceTasks = [...tasks[srcId]];
-    const [removed] = sourceTasks.splice(source.index, 1);
-
-    if (srcId === destId) {
-      sourceTasks.splice(destination.index, 0, removed);
-      setTasks({ ...tasks, [srcId]: sourceTasks });
-    } else {
-      const destTasks = [...tasks[destId]];
-      destTasks.splice(destination.index, 0, removed);
-      setTasks({
-        ...tasks,
-        [srcId]: sourceTasks,
-        [destId]: destTasks,
-      });
-    }
-  };
+  if (srcId === destId) {
+    sourceTasks.splice(destination.index, 0, removed);
+    setTasks({ ...tasks, [srcId]: sourceTasks });
+  } else {
+    const destTasks = [...tasks[destId]];
+    destTasks.splice(destination.index, 0, removed);
+    setTasks({
+      ...tasks,
+      [srcId]: sourceTasks,
+      [destId]: destTasks,
+    });
+  }
+};
 
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Pending Tasks</h2>
+     
 
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4">
@@ -204,7 +239,12 @@ const PendingTasks = () => {
                               <span className="text-xs text-gray-600 ml-2">
                                 ⏰ {task.time}
                               </span>
-                            </li>
+                              {task.completed && (
+                                  <span className="text-xs text-green-700 ml-2">
+                                    ✅ Score: {task.score}%
+                                  </span>
+                                )}
+                          </li>
                           )}
                         </Draggable>
                       ))}

@@ -37,6 +37,7 @@ const EisenhowerMatrix = () => {
   const [tookTime, setTookTime] = useState({ h: "", m: "0" });
   const [currentToggledTask, setCurrentToggledTask] = useState({ id: null, index: null });
   const [showPendingButton, setShowPendingButton] = useState(false);
+  const [totalScore, setTotalScore] = useState(0);
 
   const navigate = useNavigate();
 
@@ -70,6 +71,7 @@ const EisenhowerMatrix = () => {
           time: formatDuration(task.ideal_time),
           completed: task.status,
           took: task.taken_time !== "PT0H0M" ? formatDuration(task.taken_time) : null,
+           score: task.score,
         });
       }
 
@@ -78,6 +80,11 @@ const EisenhowerMatrix = () => {
         console.log("Has pending task:", task);
       }
     });
+    const completedTasks = Object.values(grouped).flat().filter(t => t.completed);
+    const total = completedTasks.length > 0
+      ? completedTasks.reduce((sum, task) => sum + (task.score || 0), 0) / completedTasks.length
+      : 0;
+    setTotalScore(Math.round(total));
 
     console.log("Grouped tasks:", grouped);
     console.log("Has pending?", hasPending);
@@ -183,6 +190,8 @@ const EisenhowerMatrix = () => {
       await fetch(`http://127.0.0.1:8000/productivity/${task.id}/`, { method: "DELETE" });
       const updated = tasks[id].filter((_, i) => i !== index);
       setTasks({ ...tasks, [id]: updated });
+      updateTaskStatus(task.id, false, "PT0H0M");
+      fetchTasks();
     } catch (err) {
       console.error(err);
       alert("Error deleting task.");
@@ -200,21 +209,29 @@ const EisenhowerMatrix = () => {
       updated[index].completed = false;
       updated[index].took = null;
       setTasks({ ...tasks, [id]: updated });
+      updateTaskStatus(task.id, false, "PT0H0M");
+      fetchTasks();
     }
   };
 
   const updateTaskStatus = async (taskId, status, tookDuration) => {
-    const payload = { status: status, taken_time: tookDuration };
     try {
       await fetch(`http://127.0.0.1:8000/productivity/${taskId}/`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: status,
+          taken_time: tookDuration,
+        }),
       });
     } catch (err) {
       console.error(err);
+      alert("Error updating task status.");
     }
   };
+
 
   const confirmTookTime = async () => {
     const { h, m } = tookTime;
@@ -227,7 +244,7 @@ const EisenhowerMatrix = () => {
     const updated = [...tasks[id]];
     updated[index].completed = true;
     updated[index].took = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
-    setTasks({ ...tasks, [id]: updated });
+    fetchTasks();
     setTookTime({ h: "", m: "0" });
     setShowTookModal(false);
   };
@@ -258,6 +275,9 @@ const EisenhowerMatrix = () => {
   return (
     <div className="flex flex-col items-center justify-center px-4 font-mono mt-1/8 bg-white min-h-screen relative">
       <h1 className="text-3xl mb-2 font-bold">TO-DO List</h1>
+      <p className="text-lg font-bold text-green-700 mb-2">
+      ✅ Total Score: {totalScore}%
+     </p>
       <p className="text-sm text-gray-600 italic mb-4">{quote}</p>
 
       <div className="flex flex-wrap gap-2 w-full max-w-4xl mb-8 items-center relative">
@@ -380,6 +400,7 @@ const EisenhowerMatrix = () => {
                           >
                             {(provided) => (
                               <li
+                              
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
@@ -399,6 +420,12 @@ const EisenhowerMatrix = () => {
                                     🕓 Took: {task.took}
                                   </span>
                                 )}
+                                <span className="text-xs text-gray-600 ml-2">⏰ {task.time}</span>
+                                    {task.completed && (
+                                      <span className="text-xs text-green-700 ml-2">
+                                        ✅ Score: {task.score}%
+                                      </span>
+                                    )}
                                 <button
                                   onClick={() => deleteTask(q.id, index)}
                                   className="ml-auto text-red-600 font-bold"
