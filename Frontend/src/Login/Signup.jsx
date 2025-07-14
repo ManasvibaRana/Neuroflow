@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Lottie from "lottie-react";
 import brainbot from "./Images/Brainbot.json";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "sonner"; 
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +16,33 @@ const Signup = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || "/journal";
+
+  const startChimeRef = useRef(null);
+  const successChimeRef = useRef(null);
+  const errorChimeRef = useRef(null);
+
+  useEffect(() => {
+    const loadChime = async (url, ref) => {
+      try {
+        const { Howl } = await import("howler");
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.url) {
+          ref.current = new Howl({
+            src: [data.url],
+            volume: 0.5,
+            format: ["mp3"],
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to load chime:", url, err);
+      }
+    };
+
+    loadChime("http://localhost:8000/music/api/chime/start_chime/", startChimeRef);
+    loadChime("http://localhost:8000/music/api/chime/success_chime/", successChimeRef);
+    loadChime("http://localhost:8000/music/api/chime/error_chime/", errorChimeRef);
+  }, []);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,9 +74,11 @@ const Signup = () => {
       if (res.ok) {
         setError("");
         setStep(2);
-        alert("OTP sent to your email!");
+        toast.success("📨 OTP sent to your email!");
+        startChimeRef.current?.play();
       } else {
-        setError(data.error || "Failed to send OTP");
+        errorChimeRef.current?.play();
+        toast.error(data.error || "Failed to send OTP");
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -77,7 +107,8 @@ const Signup = () => {
         // ✅ SAME FINAL LOGIC
         sessionStorage.setItem("token", data.token);
         sessionStorage.setItem("userid", userid);
-        alert("Sign Up Successful!");
+        toast.success("🎉 Sign Up Successful!");
+        successChimeRef.current?.play();
 
         const pendingText = sessionStorage.getItem("pending_journal");
         const pendingAnalysis = sessionStorage.getItem("pending_analysis");
@@ -102,7 +133,8 @@ const Signup = () => {
 
         navigate(from, { replace: true });
       } else {
-        setError(data.error || "Invalid OTP. Try again.");
+        errorChimeRef.current?.play();
+        toast.error(data.error || "Invalid OTP. Try again.");
       }
     } catch {
       setError("Something went wrong. Please try again.");

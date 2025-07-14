@@ -9,7 +9,7 @@ import Pomodo from "./Pomodo/Pomodo";
 import UserDashboard from "./Dashboard/UserDashboard";
 import Activity from "./Activity/ActivityPage"
 import PendingTasks from "./Productivity/PendingTasks";
-
+import { Toaster, toast } from 'sonner';
 
 import { BrowserRouter, Routes,Route,
   Navigate,
@@ -31,6 +31,7 @@ const PrivateRoute = () => {
 export function App() {
   return (
     <BrowserRouter>
+     <Toaster richColors position="top-right" />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
