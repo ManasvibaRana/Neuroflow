@@ -3,40 +3,96 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import User
 import bcrypt
+from django.core.mail import send_mail
+from .models import User, PendingUser
+import random
+
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
 
 @csrf_exempt
 def signup(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    userid = data.get('userid')
+    email = data.get('email')
+    password = data.get('password')
+
+    if not userid or not email or not password:
+        return JsonResponse({'error': 'All fields are required'}, status=400)
+
+    if len(password) < 8:
+        return JsonResponse({'error': 'Password must be at least 8 characters'}, status=400)
+
+    if User.objects.filter(userid=userid).exists():
+        return JsonResponse({'error': 'User ID already exists'}, status=400)
+
+    if User.objects.filter(email=email).exists():
+        return JsonResponse({'error': 'Email already exists'}, status=400)
+
+    hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    otp = generate_otp()
+
+    # Create or update pending user
+    pending, created = PendingUser.objects.update_or_create(
+        email=email,
+        defaults={
+            'userid': userid,
+            'hashed_password': hashed_pw,
+            'otp': otp
+        }
+    )
+
+    # Send email
+    send_mail(
+        subject='Verify your NeuroFlow Account',
+        message=f'Your verification code is: {otp}',
+        from_email=None,  # Uses DEFAULT_FROM_EMAIL
+        recipient_list=[email],
+        fail_silently=False
+    )
+
+    return JsonResponse({
+        'message': 'Verification code sent to email',
+        'status': 'pending_created' if created else 'pending_updated'
+    }, status=200)
+
+@csrf_exempt
+def verify_otp(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        userid = data.get('userid')
         email = data.get('email')
-        password = data.get('password')
+        otp = data.get('otp')
 
-        if not userid or not email or not password:
-            return JsonResponse({'error': 'All fields are required'}, status=400)
+        if not email or not otp:
+            return JsonResponse({'error': 'Email and OTP are required'}, status=400)
 
-        if len(password) < 8:
-            return JsonResponse({'error': 'Password must be at least 8 characters'}, status=400)
+        try:
+            pending = PendingUser.objects.get(email=email)
+        except PendingUser.DoesNotExist:
+            return JsonResponse({'error': 'No pending registration for this email'}, status=404)
 
-        if User.objects.filter(userid=userid).exists():
-            return JsonResponse({'error': 'User ID already exists'}, status=400)
+        if pending.otp != otp:
+            return JsonResponse({'error': 'Invalid OTP'}, status=400)
 
-        if User.objects.filter(email=email).exists():
-            return JsonResponse({'error': 'Email already exists'}, status=400)
-
-        # Hash the password
-        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
+        # OTP is correct → create final user
         User.objects.create(
-            userid=userid,
-            email=email,
-            password=hashed_pw.decode('utf-8')
+            userid=pending.userid,
+            email=pending.email,
+            password=pending.hashed_password
         )
+        pending.delete()  # cleanup
 
-        return JsonResponse({'message': 'User registered successfully'}, status=201)
+        return JsonResponse({'message': 'Account verified and created successfully'}, status=201)
 
-    return JsonResponse({'error': 'Only POST method allowed'}, status=405)
-
+    return JsonResponse({'error': 'Only POST allowed'}, status=405)
 
 @csrf_exempt
 def login(request):

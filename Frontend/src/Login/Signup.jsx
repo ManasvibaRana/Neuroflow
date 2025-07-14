@@ -9,6 +9,8 @@ const Signup = () => {
     email: "",
     password: "",
   });
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState(1);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,7 +19,7 @@ const Signup = () => {
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
     const { userid, email, password } = formData;
 
@@ -43,6 +45,36 @@ const Signup = () => {
 
       if (res.ok) {
         setError("");
+        setStep(2);
+        alert("OTP sent to your email!");
+      } else {
+        setError(data.error || "Failed to send OTP");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const { userid, email, password } = formData;
+
+    if (!otp) {
+      setError("Enter the OTP.");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:8000/api/verify-otp/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userid, email, password, otp }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // ✅ SAME FINAL LOGIC
         sessionStorage.setItem("token", data.token);
         sessionStorage.setItem("userid", userid);
         alert("Sign Up Successful!");
@@ -70,7 +102,7 @@ const Signup = () => {
 
         navigate(from, { replace: true });
       } else {
-        setError(data.error || "Sign up failed");
+        setError(data.error || "Invalid OTP. Try again.");
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -81,10 +113,7 @@ const Signup = () => {
     <div className="relative overflow-hidden bg-[#f9f9fc]">
       {/* Top-right Privacy & Terms */}
       <div className="absolute top-6 right-6 z-20 flex gap-4 text-gray-700 text-sm">
-        <button
-          className="hover:underline"
-          onClick={() => navigate("/privacy")}
-        >
+        <button className="hover:underline" onClick={() => navigate("/privacy")}>
           Privacy
         </button>
         <button className="hover:underline" onClick={() => navigate("/terms")}>
@@ -118,7 +147,7 @@ const Signup = () => {
         {/* Right Form Section */}
         <div className="w-1/2 flex justify-start items-center mt-20 ">
           <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 pt-12 relative">
-            {/* Brain image on top of form */}
+            {/* Brain image */}
             <div className="absolute -top-16 left-1/2 transform -translate-x-1/2">
               <Lottie
                 animationData={brainbot}
@@ -128,45 +157,65 @@ const Signup = () => {
             </div>
 
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">
-              Sign Up
+              {step === 1 ? "Sign Up" : "Verify OTP"}
             </h2>
 
             {error && (
               <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
             )}
 
-            <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
-              <input
-                type="text"
-                name="userid"
-                placeholder="User ID"
-                value={formData.userid}
-                onChange={handleChange}
-                className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#838ebe] placeholder-gray-500"
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="E-mail"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#838ebe] placeholder-gray-500"
-              />
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#838ebe] placeholder-gray-500"
-              />
-              <button
-                type="submit"
-                className="w-full py-3 bg-gradient-to-tr from-[#796fc1] to-[#838ebe] text-white font-semibold rounded-xl hover:scale-105 transition-transform shadow-md"
-              >
-                Sign Up
-              </button>
-            </form>
+            {step === 1 && (
+              <form className="mt-4 space-y-4" onSubmit={handleSendOtp}>
+                <input
+                  type="text"
+                  name="userid"
+                  placeholder="User ID"
+                  value={formData.userid}
+                  onChange={handleChange}
+                  className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#838ebe] placeholder-gray-500"
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="E-mail"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#838ebe] placeholder-gray-500"
+                />
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#838ebe] placeholder-gray-500"
+                />
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-gradient-to-tr from-[#796fc1] to-[#838ebe] text-white font-semibold rounded-xl hover:scale-105 transition-transform shadow-md"
+                >
+                  Send OTP
+                </button>
+              </form>
+            )}
+
+            {step === 2 && (
+              <form className="mt-4 space-y-4" onSubmit={handleVerifyOtp}>
+                <input
+                  type="text"
+                  placeholder="Enter OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#838ebe] placeholder-gray-500"
+                />
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-gradient-to-tr from-[#796fc1] to-[#838ebe] text-white font-semibold rounded-xl hover:scale-105 transition-transform shadow-md"
+                >
+                  Verify & Register
+                </button>
+              </form>
+            )}
 
             <p className="mt-4 text-center text-sm text-gray-600">
               Already have an account?{" "}

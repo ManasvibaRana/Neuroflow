@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
+from django.utils import timezone
+
 
 class User(models.Model):
     userid = models.CharField(max_length=50, unique=True, primary_key=True)
@@ -8,3 +10,15 @@ class User(models.Model):
 
     def __str__(self):
         return self.userid
+
+
+
+class PendingUser(models.Model):
+    userid = models.CharField(max_length=50, unique=True)
+    email = models.EmailField(unique=True)
+    hashed_password = models.CharField(max_length=128)
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.email

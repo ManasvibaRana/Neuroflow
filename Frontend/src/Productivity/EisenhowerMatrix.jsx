@@ -49,7 +49,13 @@ const EisenhowerMatrix = () => {
 
  const fetchTasks = async () => {
   try {
-    const res = await fetch("http://127.0.0.1:8000/productivity/");
+    const userid = sessionStorage.getItem("userid"); // ✅ get logged-in userid
+    if (!userid) {
+      console.error("No userid found in sessionStorage");
+      return;
+    }
+
+    const res = await fetch(`http://127.0.0.1:8000/productivity/?user=${userid}`);
     const data = await res.json();
     console.log("Fetched tasks:", data);
 
@@ -60,10 +66,6 @@ const EisenhowerMatrix = () => {
     data.forEach((task) => {
       const qid = getQuadrantId(task.type_of_task);
 
-      console.log("Today:", today);
-      console.log("Task date:", task.date);
-      console.log("Does it match today?", task.date === today);
-
       if (task.date === today) {
         grouped[qid].push({
           id: task.id,
@@ -71,24 +73,24 @@ const EisenhowerMatrix = () => {
           time: formatDuration(task.ideal_time),
           completed: task.status,
           took: task.taken_time !== "PT0H0M" ? formatDuration(task.taken_time) : null,
-           score: task.score,
+          score: task.score,
         });
       }
 
       if (!task.status && task.date < today) {
         hasPending = true;
-        console.log("Has pending task:", task);
       }
     });
-    const completedTasks = Object.values(grouped).flat().filter(t => t.completed);
-    const total = completedTasks.length > 0
-      ? completedTasks.reduce((sum, task) => sum + (task.score || 0), 0) / completedTasks.length
-      : 0;
+
+    const completedTasks = Object.values(grouped)
+      .flat()
+      .filter((t) => t.completed);
+    const total =
+      completedTasks.length > 0
+        ? completedTasks.reduce((sum, task) => sum + (task.score || 0), 0) /
+          completedTasks.length
+        : 0;
     setTotalScore(Math.round(total));
-
-    console.log("Grouped tasks:", grouped);
-    console.log("Has pending?", hasPending);
-
     setTasks(grouped);
     setShowPendingButton(hasPending);
   } catch (err) {
