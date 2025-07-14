@@ -47,59 +47,58 @@ const EisenhowerMatrix = () => {
     fetchTasks();
   }, []);
 
- const fetchTasks = async () => {
-  try {
-    const userid = sessionStorage.getItem("userid"); // ✅ get logged-in userid
-    if (!userid) {
-      console.error("No userid found in sessionStorage");
-      return;
+  const fetchTasks = async () => {
+    try {
+      const userid = sessionStorage.getItem("userid");
+      if (!userid) {
+        console.error("No userid found in sessionStorage");
+        return;
+      }
+
+      const res = await fetch(`http://127.0.0.1:8000/productivity/?user=${userid}`);
+      const data = await res.json();
+      console.log("Fetched tasks:", data);
+
+      const grouped = { 1: [], 2: [], 3: [], 4: [] };
+      const today = new Date().toISOString().split("T")[0];
+      let hasPending = false;
+
+      data.forEach((task) => {
+        const qid = getQuadrantId(task.type_of_task);
+
+        if (task.date === today) {
+          grouped[qid].push({
+            id: task.id,
+            text: task.task,
+            time: formatDuration(task.ideal_time),
+            completed: task.status,
+            took: task.taken_time !== "PT0H0M" ? formatDuration(task.taken_time) : null,
+            score: task.score,
+          });
+        }
+
+        if (!task.status && task.date < today) {
+          hasPending = true;
+        }
+      });
+
+      const completedTasks = Object.values(grouped)
+        .flat()
+        .filter((t) => t.completed);
+      const total =
+        completedTasks.length > 0
+          ? completedTasks.reduce((sum, task) => sum + (task.score || 0), 0) /
+            completedTasks.length
+          : 0;
+      setTotalScore(Math.round(total));
+      setTasks(grouped);
+      setShowPendingButton(hasPending);
+    } catch (err) {
+      console.error(err);
     }
+  };
 
-    const res = await fetch(`http://127.0.0.1:8000/productivity/?user=${userid}`);
-    const data = await res.json();
-    console.log("Fetched tasks:", data);
-
-    const grouped = { 1: [], 2: [], 3: [], 4: [] };
-    const today = new Date().toISOString().split("T")[0];
-    let hasPending = false;
-
-    data.forEach((task) => {
-      const qid = getQuadrantId(task.type_of_task);
-
-      if (task.date === today) {
-        grouped[qid].push({
-          id: task.id,
-          text: task.task,
-          time: formatDuration(task.ideal_time),
-          completed: task.status,
-          took: task.taken_time !== "PT0H0M" ? formatDuration(task.taken_time) : null,
-          score: task.score,
-        });
-      }
-
-      if (!task.status && task.date < today) {
-        hasPending = true;
-      }
-    });
-
-    const completedTasks = Object.values(grouped)
-      .flat()
-      .filter((t) => t.completed);
-    const total =
-      completedTasks.length > 0
-        ? completedTasks.reduce((sum, task) => sum + (task.score || 0), 0) /
-          completedTasks.length
-        : 0;
-    setTotalScore(Math.round(total));
-    setTasks(grouped);
-    setShowPendingButton(hasPending);
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-
-  const getQuadrantId = (type) => { 
+  const getQuadrantId = (type) => {
     switch (type) {
       case "DO": return "1";
       case "DECIDE": return "2";
@@ -192,7 +191,6 @@ const EisenhowerMatrix = () => {
       await fetch(`http://127.0.0.1:8000/productivity/${task.id}/`, { method: "DELETE" });
       const updated = tasks[id].filter((_, i) => i !== index);
       setTasks({ ...tasks, [id]: updated });
-      updateTaskStatus(task.id, false, "PT0H0M");
       fetchTasks();
     } catch (err) {
       console.error(err);
@@ -211,7 +209,6 @@ const EisenhowerMatrix = () => {
       updated[index].completed = false;
       updated[index].took = null;
       setTasks({ ...tasks, [id]: updated });
-      updateTaskStatus(task.id, false, "PT0H0M");
       fetchTasks();
     }
   };
@@ -234,24 +231,33 @@ const EisenhowerMatrix = () => {
     }
   };
 
-
   const confirmTookTime = async () => {
     const { h, m } = tookTime;
-    if ((!h || !m)  || (h<=0 && m<=0)) return alert("Please enter full completion time.");
+    if ((!h || !m) || (h <= 0 && m <= 0)) return alert("Please enter full completion time.");
     const tookDuration = `PT${parseInt(h)}H${parseInt(m)}M`;
     const { id, index } = currentToggledTask;
     const task = tasks[id][index];
     await updateTaskStatus(task.id, true, tookDuration);
-
-    const updated = [...tasks[id]];
-    updated[index].completed = true;
-    updated[index].took = `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
     fetchTasks();
     setTookTime({ h: "", m: "0" });
     setShowTookModal(false);
   };
 
-  const onDragEnd = (result) => {
+  const updateTaskQuadrant = async (taskId, newQuadrantId) => {
+    try {
+      await fetch(`http://127.0.0.1:8000/productivity/${taskId}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type_of_task: getTypeLabel(newQuadrantId),
+        }),
+      });
+    } catch (err) {
+      console.error("Error updating quadrant:", err);
+    }
+  };
+
+  const onDragEnd = async (result) => {
     const { source, destination } = result;
     if (!destination) return;
 
@@ -259,6 +265,8 @@ const EisenhowerMatrix = () => {
     const destId = destination.droppableId;
     const sourceTasks = [...tasks[srcId]];
     const [removed] = sourceTasks.splice(source.index, 1);
+
+    if (removed.completed) return;
 
     if (srcId === destId) {
       sourceTasks.splice(destination.index, 0, removed);
@@ -271,18 +279,19 @@ const EisenhowerMatrix = () => {
         [srcId]: sourceTasks,
         [destId]: destTasks,
       });
+      await updateTaskQuadrant(removed.id, destId);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 font-mono mt-1/8 bg-white min-h-screen relative">
+    <div className="flex flex-col items-center justify-center px-4 font-mono bg-white min-h-screen relative">
       <h1 className="text-3xl mb-2 font-bold">TO-DO List</h1>
       <p className="text-lg font-bold text-green-700 mb-2">
-      ✅ Total Score: {totalScore}%
-     </p>
+        ✅ Total Score: {totalScore}%
+      </p>
       <p className="text-sm text-gray-600 italic mb-4">{quote}</p>
 
-      <div className="flex flex-wrap gap-2 w-full max-w-4xl mb-8 items-center relative">
+      <div className="flex flex-wrap gap-2 w-full max-w-4xl mb-8 items-center">
         <input
           type="text"
           placeholder="Add task..."
@@ -294,7 +303,7 @@ const EisenhowerMatrix = () => {
         <div className="relative">
           <button
             onClick={() => setShowTimeModal((prev) => !prev)}
-            className="flex items-center gap-1 bg-gray-200 px-2 py-1 rounded"
+            className="bg-gray-200 px-2 py-1 rounded"
           >
             🕒 Set Time
           </button>
@@ -349,108 +358,86 @@ const EisenhowerMatrix = () => {
         >
           Add
         </button>
-
-        {showPendingButton && (
-          <button
-  onClick={() => navigate("/pending-tasks")}
-  className="fixed top-4 left-4 bg-yellow-500 text-white px-4 py-2 rounded-full shadow-lg z-50"
->
-  View Pending Tasks
-</button>
-        )}
       </div>
 
-      <div className="relative max-w-5xl w-full mt-10">
-        <div className="hidden md:flex absolute top-[-4.5rem] left-0 right-0 justify-center text-sm font-semibold mt-6">
-          <div className="flex justify-around w-full max-w-4xl">
-            <div className="bg-gray-200 p-2 rounded-md w-1/2 text-center mr-2">
-              Urgent
-            </div>
-            <div className="bg-gray-200 p-2 rounded-md w-1/2 text-center ml-2">
-              Not Urgent
-            </div>
-          </div>
-        </div>
+      {showPendingButton && (
+        <button
+          onClick={() => navigate("/pending-tasks")}
+          className="fixed top-4 left-4 bg-yellow-500 text-white px-4 py-2 rounded-full shadow-lg z-50"
+        >
+          View Pending Tasks
+        </button>
+      )}
 
-        <div className="hidden md:flex absolute top-0 bottom-0 left-0 flex-col justify-between text-sm font-semibold h-full py-1 translate-x-[-3rem]">
-          <div className="bg-gray-200 p-2 py-2 rounded-md transform -rotate-90 origin-top-left whitespace-nowrap mt-44 text-center px-12">
-            Important
-          </div>
-          <div className="bg-gray-200 p-2 rounded-md transform -rotate-90 origin-top-left py-2 whitespace-nowrap mt-48 text-center px-12">
-            Not Important
-          </div>
-        </div>
-
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4">
-            {quadrants.map((q) => (
-              <Droppable droppableId={q.id} key={q.id}>
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`p-4 border ${q.color} flex flex-col h-[200px] rounded-lg`}
-                  >
-                    <h2 className="text-xl font-bold mb-2">{q.title}</h2>
-                    <div className="overflow-y-auto pr-1 flex-1 custom-scrollbar">
-                      <ul className="flex flex-col gap-1">
-                        {tasks[q.id].map((task, index) => (
-                          <Draggable
-                            key={`${q.id}-${index}`}
-                            draggableId={`${q.id}-${index}`}
-                            index={index}
-                          >
-                            {(provided) => (
-                              <li
-                              
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className="relative flex items-center bg-white p-2 rounded shadow-sm text-sm"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={task.completed}
-                                  onChange={() => toggleTask(q.id, index)}
-                                />
-                                <span className={`ml-2 ${task.completed ? "line-through text-gray-500" : ""}`}>
-                                  {task.text}
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4">
+          {quadrants.map((q) => (
+            <Droppable key={q.id} droppableId={q.id}>
+              {(provided) => (
+                                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={`p-4 border ${q.color} flex flex-col h-[250px] rounded-lg`}
+                >
+                  <h2 className="text-xl font-bold mb-2">{q.title}</h2>
+                  <div className="overflow-y-auto pr-1 flex-1 custom-scrollbar">
+                    <ul className="flex flex-col gap-1">
+                      {tasks[q.id].map((task, index) => (
+                        <Draggable
+                          key={`${q.id}-${index}`}
+                          draggableId={`${q.id}-${index}`}
+                          index={index}
+                        >
+                          {(provided) => (
+                            <li
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className="relative flex items-center bg-white p-2 rounded shadow-sm text-sm"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={task.completed}
+                                onChange={() => toggleTask(q.id, index)}
+                              />
+                              <span className={`ml-2 ${task.completed ? "line-through text-gray-500" : ""}`}>
+                                {task.text}
+                              </span>
+                              {task.completed && task.took && (
+                                <span className="text-xs text-gray-600 ml-2">
+                                  🕓 Took: {task.took}
                                 </span>
-
-                                {task.completed && task.took && (
-                                  <span className="text-xs text-gray-600 ml-2">
-                                    🕓 Took: {task.took}
-                                  </span>
-                                )}
-                                <span className="text-xs text-gray-600 ml-2">⏰ {task.time}</span>
-                                    {task.completed && (
-                                      <span className="text-xs text-green-700 ml-2">
-                                        ✅ Score: {task.score}%
-                                      </span>
-                                    )}
-                                <button
-                                  onClick={() => deleteTask(q.id, index)}
-                                  className="ml-auto text-red-600 font-bold"
-                                >
-                                  ✕
-                                </button>
-                              </li>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </ul>
-                    </div>
+                              )}
+                              <span className="text-xs text-gray-600 ml-2">
+                                ⏰ {task.time}
+                              </span>
+                              {task.completed && (
+                                <span className="text-xs text-green-700 ml-2">
+                                  ✅ Score: {task.score}%
+                                </span>
+                              )}
+                              <button
+                                onClick={() => deleteTask(q.id, index)}
+                                className="ml-auto text-red-600 font-bold"
+                              >
+                                ✕
+                              </button>
+                            </li>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </ul>
                   </div>
-                )}
-              </Droppable>
-            ))}
-          </div>
-        </DragDropContext>
-      </div>
+                </div>
+              )}
+            </Droppable>
+          ))}
+        </div>
+      </DragDropContext>
 
       {showTookModal && (
-        <div className="fixed inset-0 flex justify-center items-center z-50">
+        <div className="fixed inset-0 flex justify-center items-center z-50 bg-black bg-opacity-30">
           <div className="bg-white p-4 rounded shadow-md">
             <h3 className="text-lg font-semibold mb-2">How long did it take?</h3>
             <div className="flex gap-2 items-center mb-4">
@@ -472,7 +459,7 @@ const EisenhowerMatrix = () => {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => {
-                  setTookTime({ h: "", m: "" });
+                  setTookTime({ h: "", m: "0" });
                   setShowTookModal(false);
                 }}
                 className="px-4 py-1 bg-gray-300 rounded"
@@ -494,3 +481,4 @@ const EisenhowerMatrix = () => {
 };
 
 export default EisenhowerMatrix;
+
