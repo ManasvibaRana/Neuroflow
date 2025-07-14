@@ -78,7 +78,7 @@ const PendingTasks = () => {
   let ratio = tookMins / idealMins;
   let score = 0;
   if (ratio <= 1) {
-    score = 100 - ratio * 50; // 100% if faster, lower if slower
+    score = 100 - ratio * 50; 
   } else {
     score = 100 - ratio * 50;
     if (score < 0) score = 0;

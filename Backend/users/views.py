@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import User
+import bcrypt
 
 @csrf_exempt
 def signup(request):
@@ -23,40 +24,42 @@ def signup(request):
         if User.objects.filter(email=email).exists():
             return JsonResponse({'error': 'Email already exists'}, status=400)
 
-        User.objects.create(userid=userid, email=email, password=password)
+        # Hash the password
+        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        User.objects.create(
+            userid=userid,
+            email=email,
+            password=hashed_pw.decode('utf-8')
+        )
+
         return JsonResponse({'message': 'User registered successfully'}, status=201)
 
     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
 
 
-# views.py
 @csrf_exempt
 def login(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        identifier = data.get('userid')  # can be userid or email
+        identifier = data.get('userid')  # userID or email
         password = data.get('password')
 
         if not identifier or not password:
             return JsonResponse({'error': 'User ID/Email and password are required'}, status=400)
 
-        # Check if identifier looks like an email
-        if '@' in identifier:
-            try:
+        try:
+            if '@' in identifier:
                 user = User.objects.get(email=identifier)
-            except User.DoesNotExist:
-                return JsonResponse({'error': 'Email not found'}, status=404)
-        else:
-            try:
+            else:
                 user = User.objects.get(userid=identifier)
-            except User.DoesNotExist:
-                return JsonResponse({'error': 'User ID not found'}, status=404)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
 
-        if user.password == password:
-          
+        if bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
             return JsonResponse({
                 'message': 'Login successful',
-                'userid': user.userid  # ✅ Now sending userid
+                'userid': user.userid
             }, status=200)
         else:
             return JsonResponse({'error': 'Incorrect password'}, status=401)

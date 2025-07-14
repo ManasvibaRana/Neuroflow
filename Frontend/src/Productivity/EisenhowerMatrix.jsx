@@ -414,7 +414,7 @@ const EisenhowerMatrix = () => {
                                 <span className={`ml-2 ${task.completed ? "line-through text-gray-500" : ""}`}>
                                   {task.text}
                                 </span>
-                                <span className="text-xs text-gray-600 ml-2">⏰ {task.time}</span>
+
                                 {task.completed && task.took && (
                                   <span className="text-xs text-gray-600 ml-2">
                                     🕓 Took: {task.took}
