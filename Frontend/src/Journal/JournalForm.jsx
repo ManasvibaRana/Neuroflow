@@ -7,6 +7,10 @@ import JournalAnalysis from "./JournalAnalysis";
 import AudioPlayer from "./AudioPlayer";
 import { useNavigate } from "react-router-dom";
 import ChatButton from '../Chat/ChatButton';
+import { toast } from "sonner";
+import useSound from "use-sound";
+// import { motion, AnimatePresence } from "framer-motion";
+
 const emotionEmojis = [
   { emotion: "Joy", emoji: "😊" },
   { emotion: "Sadness", emoji: "😢" },
@@ -78,6 +82,22 @@ export default function JournalForm() {
   const [enlargedIndex, setEnlargedIndex] = useState(null);
   const enlargedImage = enlargedIndex !== null ? images[enlargedIndex] : null;
 
+  const [chimeUrl, setChimeUrl] = useState(null);
+  const chimeRef = useRef(null);
+
+    useEffect(() => {
+      fetch('http://localhost:8000/music/api/chime/entry_saved_chime/')
+        .then(res => res.json())
+        .then(data => {
+          if (data.url) setChimeUrl(data.url);
+        });
+    }, []);
+
+  const [playChime, { sound }] = useSound(chimeUrl || "", {
+    volume: 0.5,
+    soundEnabled: false,
+     format: ['mp3'],
+  });
 
   const fileRef = useRef();
   const audioRef = useRef();
@@ -250,19 +270,34 @@ export default function JournalForm() {
     setImages(prev => prev.filter((_, i) => i !== idx));
   };
 
- const handleSubmit = async () => {
-    if (!text.trim()) {
-      if (images.length > 0) {
-        alert("🛑 Please write something before submitting your journal.");
-      }
-      return;
+  const handleSubmit = async () => {
+  // 🟡 Load and prepare chime only after user gesture
+  if (chimeUrl && !chimeRef.current) {
+    const { Howl } = await import('howler'); // lazy import
+    chimeRef.current = new Howl({
+      src: [chimeUrl],
+      volume: 0.5,
+      format: ['mp3'],
+    });
+  }
+
+  // ❗ Validate input
+  if (!text.trim()) {
+    if (images.length > 0) {
+      toast.error("🛑 Please write something before submitting your journal.");
     }
+    return;
+  }
 
-    try {
-      const response = await axios.post("http://127.0.0.1:8000/journal/analyze/", { text });
-      const { top_emotions, highlight } = response.data;
-      setAnalysisResult({ top_emotions, highlight });
+  try {
+    // 🧠 Analyze journal text
+    const response = await axios.post("http://127.0.0.1:8000/journal/analyze/", { text });
+    const { top_emotions, highlight } = response.data;
+    setAnalysisResult({ top_emotions, highlight });
 
+    toast.success("✅ Journal analyzed successfully!");
+
+    // 🧠 Compare with selected emoji
     const predicted = emotionEmojis.find(e => e.emoji === selectedEmoji)?.emotion || "Unknown";
     const topEmotionRaw = Array.isArray(top_emotions) && top_emotions.length > 0 ? top_emotions[0][0] : null;
     const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -270,52 +305,54 @@ export default function JournalForm() {
       ? capitalize(topEmotionRaw)
       : "Unknown";
 
-      console.log("Selected Emoji:", selectedEmoji);
-      console.log("Predicted (User Emoji):", predicted);
-      console.log("AI Top Emotion:", topEmotionRaw);
-
-     const isMatch =
+    const isMatch =
       typeof predicted === "string" &&
       typeof topEmotion === "string" &&
       topEmotion !== "Unknown" &&
       predicted.toLowerCase() === topEmotion.toLowerCase();
 
-      setSubmissionResult({
-        emoji: selectedEmoji,
-        predicted:predicted,
-        actual: topEmotion,
-        isCorrect: isMatch,
-      });
+    setSubmissionResult({
+      emoji: selectedEmoji,
+      predicted: predicted,
+      actual: topEmotion,
+      isCorrect: isMatch,
+    });
 
-      setTimeout(() => {
-        if (resultRef.current) {
-          resultRef.current.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 300);
-
-      const token = sessionStorage.getItem("token");
-      if (!token) {
-        sessionStorage.setItem("pending_journal", text);
-        sessionStorage.setItem("pending_analysis", JSON.stringify({ top_emotions, highlight }));
-        return;
+    // 📜 Scroll to result and chime
+    setTimeout(() => {
+      if (resultRef.current) {
+        resultRef.current.scrollIntoView({ behavior: "smooth" });
       }
+      chimeRef.current?.play(); // 🔔 Play after analysis
+    }, 300);
 
-      // ✅ Save journal first
-      const saveRes = await axios.post("http://127.0.0.1:8000/journal/save/", {
-        userid: sessionStorage.getItem("userid"),
-        text,
-        analysis: { top_emotions, highlight },
-      });
+    // 🔐 Guest fallback
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      sessionStorage.setItem("pending_journal", text);
+      sessionStorage.setItem("pending_analysis", JSON.stringify({ top_emotions, highlight }));
+      toast.info("⚠️ You're not logged in. Journal saved locally.");
+      return;
+    }
 
-      const newJournalId = saveRes.data.journal_id;
-      setJournalId(newJournalId);
+    // ✅ Save journal entry
+    const saveRes = await axios.post("http://127.0.0.1:8000/journal/save/", {
+      userid: sessionStorage.getItem("userid"),
+      text,
+      analysis: { top_emotions, highlight },
+    });
 
-      // ✅ Upload images only after journal saved
-      if (images.some(img => img.file)) {
-        const formData = new FormData();
-        formData.append("journal", newJournalId);
-        images.forEach(({ file }) => file && formData.append("images", file));
+    const newJournalId = saveRes.data.journal_id;
+    setJournalId(newJournalId);
+    toast.success("📒 Journal saved successfully!");
 
+    // 📤 Upload images (after journal save)
+    if (images.some(img => img.file)) {
+      const formData = new FormData();
+      formData.append("journal", newJournalId);
+      images.forEach(({ file }) => file && formData.append("images", file));
+
+      try {
         const uploadRes = await fetch("http://localhost:8000/journalmedia/upload-images/", {
           method: "POST",
           body: formData,
@@ -329,15 +366,22 @@ export default function JournalForm() {
             : `http://localhost:8000${img.image}`,
         }));
 
-
-        setImages(uploaded); // replace all with DB-tracked
+        setImages(uploaded);
+        toast.success("🖼️ Images uploaded successfully!");
+      } catch (imgErr) {
+        toast.error("⚠️ Failed to upload images.");
+        console.error("Image upload failed:", imgErr);
       }
-
-      alert(journalId ? "Journal updated successfully!" : "Journal saved successfully!");
-      setUnsavedChanges(false); // ✅ Safe to navigate now
-    } catch (err) {
-      console.error("Submit failed:", err);
     }
+
+    // Final chime to celebrate success!
+    chimeRef.current?.play();
+
+    setUnsavedChanges(false); // ✅ Clear dirty flag
+  } catch (err) {
+    console.error("Submit failed:", err);
+    toast.error("❌ Submission failed. Please try again.");
+  }
   };
 
   return (

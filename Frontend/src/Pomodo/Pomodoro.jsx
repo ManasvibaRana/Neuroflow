@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner'; // optional for feedback
+
 
 export default function Pomodoro() {
   const defaultWork = 25 * 60;
@@ -18,6 +20,34 @@ export default function Pomodoro() {
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState('work'); // work | short | long
   const [cycle, setCycle] = useState(1);
+
+  const startChimeRef = useRef(null);
+  const endChimeRef = useRef(null);
+  const errorChimeRef = useRef(null); // Optional
+
+  useEffect(() => {
+    const loadChime = async (url, ref) => {
+      try {
+        const { Howl } = await import('howler');
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.url) {
+          ref.current = new Howl({
+            src: [data.url],
+            volume: 0.5,
+            format: ['mp3'],
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to load chime:', url, err);
+      }
+    };
+
+    loadChime('http://localhost:8000/music/api/chime/start_chime/', startChimeRef);
+    loadChime('http://localhost:8000/music/api/chime/success_chime/', endChimeRef);
+    loadChime('http://localhost:8000/music/api/chime/error_chime/', errorChimeRef);
+  }, []);
+
 
   useEffect(() => {
     let interval;
@@ -41,7 +71,8 @@ export default function Pomodoro() {
     } else if (isActive && currentSeconds === 0) {
       if (mode === 'work') {
         if (totalTime <= 0) {
-          alert("🎉 All sessions done!");
+          endChimeRef.current?.play(); 
+          toast.success("🎉 All sessions done!");
           resetAll();
           return;
         }
@@ -58,6 +89,7 @@ export default function Pomodoro() {
           setCurrentSeconds(defaultShort);
         }
       } else {
+        endChimeRef.current?.play(); 
         if (mode === 'short' || mode === 'long') {
           setCycle((c) => c + 1);
         }
@@ -76,11 +108,14 @@ export default function Pomodoro() {
     if (totalTime <= 0) {
       const total = customHours * 3600 + customMinutes * 60;
       if (total <= 0) {
-        alert("⏰ Please enter total time!");
+        errorChimeRef.current?.play();
+        toast.error("⏰ Please enter total time!");
         return;
       }
       setTotalTime(total);
     }
+    startChimeRef.current?.play(); // 🔔 play start chime
+    toast.info("🕑 Pomodoro started");
     setIsActive(true);
   };
 

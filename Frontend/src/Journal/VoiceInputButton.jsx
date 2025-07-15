@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import { toast } from "sonner";
 
 const VoiceInputButton = ({ setText, themeColor }) => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -7,16 +8,33 @@ const VoiceInputButton = ({ setText, themeColor }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const timerRef = useRef(null);
 
+  const startChimeRef = useRef(null);
+  const stopChimeRef = useRef(null);
+
+  // 🎵 Load chimes once
   useEffect(() => {
-    if (SpeechRecognition && !recognitionRef.current) {
-      const recognition = new SpeechRecognition();
-      recognition.lang = "en-US";
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognitionRef.current = recognition;
-    }
+    const loadChime = async (url, ref) => {
+      const { Howl } = await import("howler");
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.url) {
+          ref.current = new Howl({
+            src: [data.url],
+            volume: 0.5,
+            format: ["mp3"]
+          });
+        }
+      } catch (error) {
+        console.warn("Failed to load chime:", url, error);
+      }
+    };
+
+    loadChime("http://localhost:8000/music/api/chime/start_chime/", startChimeRef);
+    loadChime("http://localhost:8000/music/api/chime/stop_chime/", stopChimeRef);
   }, []);
 
+  // ⏱️ Timer for visual feedback
   useEffect(() => {
     if (isRecording) {
       const start = Date.now();
@@ -31,22 +49,27 @@ const VoiceInputButton = ({ setText, themeColor }) => {
     return () => clearInterval(timerRef.current);
   }, [isRecording]);
 
-    const punctuateText = (raw) => {
-      return raw
-        .split(/(?<=[.!?])\s+/)
-        .map((s) => s.trim())
-        .filter((s) => s.length)
-        .map((s) => {
-          const lower = s.toLowerCase();
-          const capped = s.charAt(0).toUpperCase() + s.slice(1);
-          if (/[.!?]$/.test(capped)) return capped;
-          else if (lower.startsWith("how") || lower.startsWith("what") || lower.startsWith("is") || lower.startsWith("can") || lower.startsWith("do") || lower.endsWith("right")) return capped + "?";
-          else if (lower.includes("wow") || lower.includes("amazing") || lower.includes("so happy") || lower.includes("unbelievable")) return capped + "!";
-          else return capped + ".";
-        })
-        .join(" ");
-    };
-
+  const punctuateText = (raw) => {
+    return raw
+      .split(/(?<=[.!?])\s+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length)
+      .map((s) => {
+        const lower = s.toLowerCase();
+        const capped = s.charAt(0).toUpperCase() + s.slice(1);
+        if (/[.!?]$/.test(capped)) return capped;
+        else if (
+          lower.startsWith("how") || lower.startsWith("what") ||
+          lower.startsWith("is") || lower.startsWith("can") ||
+          lower.startsWith("do") || lower.endsWith("right")
+        ) return capped + "?";
+        else if (
+          lower.includes("wow") || lower.includes("amazing") ||
+          lower.includes("so happy") || lower.includes("unbelievable")
+        ) return capped + "!";
+        else return capped + ".";
+      }).join(" ");
+  };
 
   const releaseMic = () => {
     navigator.mediaDevices.getUserMedia({ audio: true })
@@ -58,44 +81,62 @@ const VoiceInputButton = ({ setText, themeColor }) => {
     const recognition = recognitionRef.current;
 
     if (!recognition) {
-      alert("Speech recognition is not supported in this browser.");
+      toast.error("🧨 Speech recognition is not supported in this browser.");
       return;
     }
 
     if (!isRecording) {
-      recognition.onstart = () => setIsRecording(true);
+      recognition.onstart = () => {
+        setIsRecording(true);
+        startChimeRef.current?.play(); // 🔊 Play start chime
+      };
 
       recognition.onresult = (event) => {
         let finalTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
-            const transcript = event.results[i][0].transcript;
-            finalTranscript += punctuateText(transcript);
+            finalTranscript += punctuateText(event.results[i][0].transcript);
           }
         }
+
         if (finalTranscript) {
           setText(prev => (prev.trim() + " " + finalTranscript).trim());
+          toast.success("📝 Voice input added");
         }
       };
 
       recognition.onend = () => {
         setIsRecording(false);
+        stopChimeRef.current?.play(); // 🔊 Play stop chime
         releaseMic();
       };
 
       recognition.onerror = (e) => {
         console.error("Speech recognition error:", e.error);
         setIsRecording(false);
+        stopChimeRef.current?.play();
         releaseMic();
       };
 
       recognition.start();
     } else {
-      recognition.stop();
+      recognition.stop(); // 👈 Manual stop
       setIsRecording(false);
+      stopChimeRef.current?.play();
       releaseMic();
     }
   };
+
+  // 🎤 Prepare speech recognition instance once
+  useEffect(() => {
+    if (SpeechRecognition && !recognitionRef.current) {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognitionRef.current = recognition;
+    }
+  }, []);
 
   return (
     <button
