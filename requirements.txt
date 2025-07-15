@@ -12,5 +12,3 @@ googlegoogle-generativeai
 react-modal
 react-calendar
 axios
-sonner
-bycrpt
