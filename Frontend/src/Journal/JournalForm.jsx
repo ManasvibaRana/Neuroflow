@@ -385,7 +385,6 @@ export default function JournalForm() {
   };
 
   return (
-    
     <ThemeProvider theme={themes[theme]}>
       <GlobalStyle font={fontFamily} />
       <Navbar />
@@ -644,7 +643,8 @@ export default function JournalForm() {
                     <MobileGallery $background={themes[theme].notebookBackground}>
                       {images.map((img, i) => (
                         <Polaroid key={i}>
-                          <img src={img.url || img.preview} alt={`img-${i}`} />
+                          <img src={img.url || img.preview} alt={`img-${i}`} onClick={() => setEnlargedIndex(i)}
+  style={{ cursor: "zoom-in" }}/>
                           <button onClick={() => removeImage(i)}>✕</button>
                           <textarea
                             placeholder="Write a caption..."
@@ -1144,6 +1144,13 @@ export default function JournalForm() {
       font-size: 16px;
       color: #444;
     }
+    @media (max-width: 768px) {
+    padding: 12px;
+
+    p {
+      font-size: 0.9rem;
+    }
+  }
   `;
 
   const CloseModal = styled.button`

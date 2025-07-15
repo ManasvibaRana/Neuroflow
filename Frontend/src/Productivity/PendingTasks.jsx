@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   DragDropContext,
   Droppable,
   Draggable,
 } from "react-beautiful-dnd";
+import { toast } from "sonner";
+import useSound from "use-sound";
+import useChimes from "../usechimes";
 
 const quadrants = [
   { id: "1", title: "DO THIS", color: "bg-blue-100" },
@@ -19,7 +22,8 @@ const PendingTasks = () => {
   const [tookTime, setTookTime] = useState({ h: "", m: "0" });
   const [currentToggledTask, setCurrentToggledTask] = useState({ id: null, index: null });
   const navigate = useNavigate();
-
+  const { startChimeRef, successChimeRef, errorChimeRef } = useChimes();
+  
   useEffect(() => {
     fetchPendingTasks();
   }, []);
@@ -125,7 +129,8 @@ const PendingTasks = () => {
  const confirmTookTime = async () => {
   const { h, m } = tookTime;
   if ((!h || !m) || (h <= 0 && m <= 0)) {
-    alert("Please enter time.");
+    toast.error("Please enter time.");
+    errorChimeRef.current?.play();
     return;
   }
 

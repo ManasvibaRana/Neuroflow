@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Lottie from "lottie-react";
 import brainbot from "./Images/Brainbot.json";
 import { toast } from "sonner";
+import useChimes from "../usechimes";
 
 const Login = () => {
   const [formData, setFormData] = useState({ userid: "", password: "" });
@@ -10,35 +11,8 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || "/journal";
-
-  const startChimeRef = useRef(null);
-  const successChimeRef = useRef(null);
-  const errorChimeRef = useRef(null);
-
-  // ⏬ Load chimes from API only once
-  useEffect(() => {
-    const loadChime = async (url, ref) => {
-      try {
-        const { Howl } = await import("howler");
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.url) {
-          ref.current = new Howl({
-            src: [data.url],
-            volume: 0.5,
-            format: ["mp3"],
-          });
-        }
-      } catch (err) {
-        console.warn("Failed to load chime:", url, err);
-      }
-    };
-
-    loadChime("http://localhost:8000/music/api/chime/start_chime/", startChimeRef);
-    loadChime("http://localhost:8000/music/api/chime/success_chime/", successChimeRef);
-    loadChime("http://localhost:8000/music/api/chime/error_chime/", errorChimeRef);
-  }, []);
-
+  const { startChimeRef, successChimeRef, errorChimeRef } = useChimes();
+  
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 

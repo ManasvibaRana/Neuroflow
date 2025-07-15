@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import useChimes from '../usechimes';
 
 function Timer() {
   const [hours, setHours] = useState(0);
@@ -10,32 +11,7 @@ function Timer() {
   const [duration, setDuration] = useState(0);
   const [isActive, setIsActive] = useState(false);
 
-  const startChimeRef = useRef(null);
-  const endChimeRef = useRef(null);
-  const errorChimeRef = useRef(null);
-
-  useEffect(() => {
-    const loadChime = async (url, ref) => {
-      try {
-        const { Howl } = await import('howler');
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.url) {
-          ref.current = new Howl({
-            src: [data.url],
-            volume: 0.5,
-            format: ['mp3'],
-          });
-        }
-      } catch (err) {
-        console.warn('Failed to load chime:', url, err);
-      }
-    };
-
-    loadChime('http://localhost:8000/music/api/chime/start_chime/', startChimeRef);
-    loadChime('http://localhost:8000/music/api/chime/success_chime/', endChimeRef);
-    loadChime('http://localhost:8000/music/api/chime/error_chime/', errorChimeRef);
-  }, []);
+  const { startChimeRef, successChimeRef, errorChimeRef } = useChimes();
 
   const startTimer = () => {
     const total = hours * 3600 + minutes * 60 + secondsInput;

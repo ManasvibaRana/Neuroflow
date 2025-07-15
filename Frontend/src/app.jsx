@@ -7,17 +7,20 @@ import Productivity from "./Productivity/Productivity";
 import J1 from "./Journal/JournalForm";
 import Pomodo from "./Pomodo/Pomodo";
 import UserDashboard from "./Dashboard/UserDashboard";
-import Activity from "./Activity/ActivityPage"
+import Activity from "./Activity/ActivityPage";
 import PendingTasks from "./Productivity/PendingTasks";
-import { Toaster, toast } from 'sonner';
+import { Toaster } from 'sonner';
 
-import { BrowserRouter, Routes,Route,
+import {
+  BrowserRouter,
+  Routes,
+  Route,
   Navigate,
   Outlet,
-  useLocation,
+  useLocation
 } from "react-router-dom";
 
-import { isLoggedIn } from "./Login/CheckLogin"; // ✅ Import here
+import { isLoggedIn } from "./Login/CheckLogin";
 
 const PrivateRoute = () => {
   const location = useLocation();
@@ -31,24 +34,32 @@ const PrivateRoute = () => {
 export function App() {
   return (
     <BrowserRouter>
-     <Toaster richColors position="top-right" />
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/journal" element={<J1 />} />
+      <div className="floating-background">
+        <div className="dots"></div>
+        <div className="dots"></div>
+        <div className="dots"></div>
+        <div className="dots"></div>
+        <div className="dots"></div>
+      </div>
 
-        {/* ✅ Protected routes go inside this parent */}
-        <Route element={<PrivateRoute />}>
-          <Route path="/pomodo" element={<Pomodo />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/activity" element={<Activity />} />
-          <Route path="/pending-tasks" element={<PendingTasks />} />
-          <Route path="/productivity" element={<Productivity />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
-        </Route>
-      </Routes>
-    
+      <div className="relative z-10 min-h-screen">
+        <Toaster richColors position="top-right" />
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/journal" element={<J1 />} />
+
+          <Route element={<PrivateRoute />}>
+            <Route path="/pomodo" element={<Pomodo />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/activity" element={<Activity />} />
+            <Route path="/pending-tasks" element={<PendingTasks />} />
+            <Route path="/productivity" element={<Productivity />} />
+            <Route path="/dashboard" element={<UserDashboard />} />
+          </Route>
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }
