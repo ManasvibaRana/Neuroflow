@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   DragDropContext,
   Droppable,
   Draggable,
 } from "react-beautiful-dnd";
+import { toast } from "sonner";
+import useSound from "use-sound";
+import useChimes from "../usechimes";
 
 const quadrants = [
   { id: "1", title: "DO THIS", color: "bg-blue-100" },
@@ -38,6 +41,8 @@ const EisenhowerMatrix = () => {
   const [currentToggledTask, setCurrentToggledTask] = useState({ id: null, index: null });
   const [showPendingButton, setShowPendingButton] = useState(false);
   const [totalScore, setTotalScore] = useState(0);
+
+  const { startChimeRef, successChimeRef, errorChimeRef } = useChimes();
 
   const navigate = useNavigate();
 
@@ -94,7 +99,8 @@ const EisenhowerMatrix = () => {
       setTasks(grouped);
       setShowPendingButton(hasPending);
     } catch (err) {
-      console.error(err);
+      toast.error("❌ Failed to fetch tasks.");
+      errorChimeRef.current?.play();
     }
   };
 
@@ -132,10 +138,17 @@ const EisenhowerMatrix = () => {
   const isTimeValid = () => tempTime.h !== "" && tempTime.m !== "";
 
   const addTask = async () => {
-    if (!newTask.trim()) return alert("Please enter a task.");
+   if (!newTask.trim()) {
+      errorChimeRef.current?.play();
+      toast.warning("Please enter a task.");
+      return;
+    }
     const { h, m } = tempTime;
-    if ((h === "0" || h === "") && (m === "0" || m === ""))
-      return alert("Please set a time greater than 0.");
+    if ((h === "0" || h === "") && (m === "0" || m === "")) {
+      errorChimeRef.current?.play(); 
+      toast.warning("⏰ Please set a time greater than 0.");
+      return;
+    }
 
     const today = new Date();
     const formattedDate = today.toISOString().split("T")[0];
@@ -161,8 +174,6 @@ const EisenhowerMatrix = () => {
       if (!response.ok) throw new Error("Failed to add task.");
 
       const data = await response.json();
-      console.log("Added task:", data);
-
       setTasks((prev) => ({
         ...prev,
         [selectedQuadrant]: [
@@ -179,11 +190,16 @@ const EisenhowerMatrix = () => {
       setNewTask("");
       setTempTime({ h: "", m: "0" });
       setShowTimeModal(false);
+
+      toast.success("🎯 Task added successfully!");
+      startChimeRef.current?.play();
     } catch (err) {
       console.error(err);
-      alert("Error adding task.");
+      toast.error("❌ Error adding task.");
+      errorChimeRef.current?.play();
     }
   };
+
 
   const deleteTask = async (id, index) => {
     const task = tasks[id][index];
@@ -191,12 +207,15 @@ const EisenhowerMatrix = () => {
       await fetch(`http://127.0.0.1:8000/productivity/${task.id}/`, { method: "DELETE" });
       const updated = tasks[id].filter((_, i) => i !== index);
       setTasks({ ...tasks, [id]: updated });
-      fetchTasks();
+      toast.success("🗑️ Task deleted!");
+      successChimeRef.current?.play();
     } catch (err) {
       console.error(err);
-      alert("Error deleting task.");
+      toast.error("❌ Error deleting task.");
+      errorChimeRef.current?.play();
     }
   };
+
 
   const toggleTask = (id, index) => {
     const task = tasks[id][index];
@@ -209,6 +228,8 @@ const EisenhowerMatrix = () => {
       updated[index].completed = false;
       updated[index].took = null;
       setTasks({ ...tasks, [id]: updated });
+      toast("📝 Task marked incomplete.");
+      startChimeRef.current?.play();
       fetchTasks();
     }
   };
@@ -227,18 +248,33 @@ const EisenhowerMatrix = () => {
       });
     } catch (err) {
       console.error(err);
-      alert("Error updating task status.");
+      toast.error("Error updating task status.");
+      errorChimeRef.current?.play();
     }
   };
 
   const confirmTookTime = async () => {
     const { h, m } = tookTime;
-    if ((!h || !m) || (h <= 0 && m <= 0)) return alert("Please enter full completion time.");
+    if ((!h || !m) || (h <= 0 && m <= 0)) {
+      errorChimeRef.current?.play()
+      toast.warning("⏱️ Please enter full completion time.");
+      return;
+    }
+
     const tookDuration = `PT${parseInt(h)}H${parseInt(m)}M`;
     const { id, index } = currentToggledTask;
     const task = tasks[id][index];
-    await updateTaskStatus(task.id, true, tookDuration);
-    fetchTasks();
+
+    try {
+      await updateTaskStatus(task.id, true, tookDuration);
+      successChimeRef.current?.play();
+      toast.success("Task marked completed with score: ");
+      fetchTasks();
+    } catch (err) {
+      toast.error("❌ Failed to update task.");
+      errorChimeRef.current?.play();
+    }
+
     setTookTime({ h: "", m: "0" });
     setShowTookModal(false);
   };
@@ -329,7 +365,7 @@ const EisenhowerMatrix = () => {
                 ))}
                 <button
                   onClick={() => {
-                    if (!isTimeValid()) return alert("Please enter full time.");
+                    if (!isTimeValid()) return toast.error("Please enter full time.");
                     setShowTimeModal(false);
                   }}
                   className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
