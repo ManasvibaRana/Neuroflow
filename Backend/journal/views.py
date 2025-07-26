@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from django.utils.timezone import now
 from journalmedia.models import JournalImage
 from journalmedia.serializers import JournalImageSerializer
-
+from django.utils.timezone import localdate
 
 @api_view(["POST"])
 def analyze_journal_only(request):
@@ -37,7 +37,7 @@ def save_journal(request):
     except User.DoesNotExist:
         return Response({"error": "Invalid user ID."}, status=401)
 
-    today = now().date()
+    today = localdate()
     journal = JournalEntry.objects.filter(user=user, date=today).first()
 
     emotions = analysis["top_emotions"]
