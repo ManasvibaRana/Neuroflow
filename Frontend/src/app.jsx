@@ -9,6 +9,7 @@ import Pomodo from "./Pomodo/Pomodo";
 import UserDashboard from "./Dashboard/UserDashboard";
 import Activity from "./Activity/ActivityPage";
 import PendingTasks from "./Productivity/PendingTasks";
+import AnalysisPage from "./Analysis/AnalysisPage"
 import { Toaster } from 'sonner';
 
 import {
@@ -54,6 +55,7 @@ export function App() {
             <Route path="/pomodo" element={<Pomodo />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/activity" element={<Activity />} />
+            <Route path="/analysis" element={<AnalysisPage/>} />
             <Route path="/pending-tasks" element={<PendingTasks />} />
             <Route path="/productivity" element={<Productivity />} />
             <Route path="/dashboard" element={<UserDashboard />} />

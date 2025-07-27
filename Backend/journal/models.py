@@ -1,9 +1,10 @@
 from django.db import models
 from users.models import User # Ensure this import comes from the same app or adjust accordingly
+from django.utils.timezone import localdate
 
 class JournalEntry(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Uses userid as PK by default
-    date = models.DateField()
+    date = models.DateField(default=localdate)
     created_at = models.DateTimeField(auto_now_add=True)
     journal_text = models.TextField()
 
