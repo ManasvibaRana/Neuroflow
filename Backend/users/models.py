@@ -7,10 +7,11 @@ class User(models.Model):
     userid = models.CharField(max_length=50, unique=True, primary_key=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128, validators=[MinLengthValidator(8)])
+    streak = models.IntegerField(default=0)
+    last_streak_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return self.userid
-
 
 
 class PendingUser(models.Model):

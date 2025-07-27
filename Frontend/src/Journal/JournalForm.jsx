@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 import ChatButton from '../Chat/ChatButton';
 import { toast } from "sonner";
 import useSound from "use-sound";
-// import { motion, AnimatePresence } from "framer-motion";
 
 const emotionEmojis = [
   { emotion: "Joy", emoji: "😊" },

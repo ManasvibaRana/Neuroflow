@@ -188,36 +188,3 @@ def generate_ai_insights(correlation_details, emotions):
         dominant_emotion = max(emotions.items(), key=lambda x: x[1])[0]
         insights.append(f"'{dominant_emotion.title()}' was your most frequent emotion this week.")
     return insights
-
-@api_view(["GET"])
-@permission_classes([])
-def streak_and_badge(request):
-    userid = request.GET.get("userid")
-    if not userid: return Response({"error": "Missing userid"}, status=400)
-    try: user = User.objects.get(userid=userid)
-    except User.DoesNotExist: return Response({"error": "Invalid user ID."}, status=401)
-    
-    today = localdate()
-    streak = 0
-    day = today
-    # MODIFIED: Changed 'and' to 'or' to make the streak condition more lenient.
-    # A day now counts if EITHER a journal entry exists OR a productivity task was completed.
-    while JournalEntry.objects.filter(user=user, date=day).exists() or Productivity.objects.filter(user=user, date=day, status=True).exists():
-        streak += 1
-        day -= timedelta(days=1)
-    
-    # Badge logic with more tiers based on streak length
-    if streak >= 180:
-        badge = "diamond"
-    elif streak >= 90:
-        badge = "platinum"
-    elif streak >= 30:
-        badge = "gold"
-    elif streak >= 7:
-        badge = "silver"
-    elif streak >= 1:
-        badge = "bronze"
-    else:
-        badge = "none"
-        
-    return Response({"streak": streak, "badge": badge})
