@@ -6,6 +6,8 @@ import bcrypt
 from django.core.mail import send_mail
 from .models import User, PendingUser
 import random
+from django.http import JsonResponse
+from .models import User
 
 
 def generate_otp():
@@ -121,3 +123,26 @@ def login(request):
             return JsonResponse({'error': 'Incorrect password'}, status=401)
 
     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+
+def get_user_stats(request):
+    userid = request.GET.get('userid')
+    if not userid:
+        return JsonResponse({'error': 'User ID is required'}, status=400)
+
+    try:
+        user = User.objects.get(userid=userid)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
+
+    # Logic to determine badge based on streak
+    streak = user.streak
+    badge = "bronze"
+    if streak >= 15: badge = "silver"
+    if streak >= 30: badge = "gold"
+    if streak >= 60: badge = "platinum"
+    if streak >= 100: badge = "diamond"
+
+    return JsonResponse({
+        'streak': streak,
+        'badge': badge
+    })

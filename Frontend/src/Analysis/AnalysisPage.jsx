@@ -5,147 +5,14 @@ import {
     BarChart, Bar, ResponsiveContainer, AreaChart, Area, RadarChart, Radar,
     PolarGrid, PolarAngleAxis, ComposedChart, CartesianGrid, Treemap
 } from "recharts";
+import MainNavbar from '.././Navbar.jsx'; 
+import { toast } from "sonner"; 
+import useChimes from "../usechimes";
 
 // --- Mock React Router DOM ---
 const useNavigate = () => {
   return (path) => console.log(`Navigating to ${path}`);
 };
-
-// --- Badge Component ---
-const Badge = ({ type }) => {
-  const badgeConfig = {
-    bronze: { style: 'bg-orange-400 text-orange-800 border-orange-500', icon: <path fillRule="evenodd" d="M12 2L15.5 8.5L22 9.5L17 14.5L18.5 21L12 17.5L5.5 21L7 14.5L2 9.5L8.5 8.5L12 2Z" clipRule="evenodd" /> },
-    silver: { style: 'bg-gray-300 text-gray-700 border-gray-400', icon: <path fillRule="evenodd" d="M12 1C12.7 1 13.3 1.4 13.6 2L16.1 7.6L22.4 8.5C23.1 8.6 23.6 9.1 23.7 9.8C23.8 10.5 23.4 11.1 22.8 11.4L18.2 15.4L19.6 21.6C19.8 22.3 19.5 23 18.9 23.3C18.3 23.6 17.6 23.5 17.1 23L12 20.2L6.9 23C6.4 23.3 5.7 23.4 5.1 23.1C4.5 22.8 4.2 22.1L5.8 15.2L1.2 11.2C0.6 10.7 0.4 9.9 0.7 9.2C1 8.5 1.7 8.1 2.4 8.2L8.7 9.1L11.2 3.5C11.5 2.8 12.2 2.4 12.9 2.4C12.6 2.3 12.3 2.1 12 2V1Z" clipRule="evenodd" /> },
-    gold: { style: 'bg-yellow-400 text-yellow-800 border-yellow-500', icon: <path fillRule="evenodd" d="M12 1L15.09 7.26L22 8.27L17 13.14L18.18 20.02L12 16.77L5.82 20.02L7 13.14L2 8.27L8.91 7.26L12 1ZM12 3.5L9.5 8.5L4 9.2L7.5 12.5L6.5 18L12 15.2L17.5 18L16.5 12.5L20 9.2L14.5 8.5L12 3.5Z" clipRule="evenodd" /> },
-    platinum: { style: 'bg-slate-300 text-slate-700 border-slate-500', icon: <path fillRule="evenodd" d="M12 2C12.6 2 13.1 2.3 13.4 2.8L16.2 7.8L22 8.6C22.6 8.7 23.1 9.1 23.2 9.7C23.3 10.3 23 10.8 22.5 11.1L18.3 14.6L19.4 20.3C19.5 20.9 19.3 21.5 18.8 21.8C18.3 22.1 17.7 22 17.2 21.7L12 18.9L6.8 21.7C6.3 22 5.7 22.1 5.2 21.8C4.7 21.5 19.3 20.9 4.6 20.3L5.7 14.6L1.5 11.1C1 10.8 0.7 10.3 0.8 9.7C0.9 9.1 1.4 8.7 2 8.6L7.8 7.8L10.6 2.8C10.9 2.3 11.4 2 12 2ZM12 4.5L9.8 8.5L5.2 9.1L8.1 11.8L7.3 16.4L12 14.1L16.7 16.4L15.9 11.8L18.8 9.1L14.2 8.5L12 4.5ZM12 6C13.4 6 14.5 7.1 14.5 8.5S13.4 11 12 11S9.5 9.9 9.5 8.5S10.6 6 12 6Z" clipRule="evenodd" /> },
-    diamond: { style: 'bg-sky-300 text-sky-700 border-sky-500', icon: <path fillRule="evenodd" d="M12 2L18 8L12 22L6 8L12 2ZM12 4.8L8.4 8.8L12 18.2L15.6 8.8L12 4.8ZM12 6L14.5 8.5H9.5L12 6Z" clipRule="evenodd" /> },
-  };
-  const config = badgeConfig[type];
-  if (!config) return null;
-  return (
-    <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${config.style}`}>
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">{config.icon}</svg>
-    </div>
-  );
-};
-
-// --- Navbar Component ---
-const MainNavbar = () => {
-  const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [userid, setUserid] = useState("SampleUser");
-  const [streak, setStreak] = useState(15);
-  const [badge, setBadge] = useState("gold");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const navRef = useRef(null);
-
-  useEffect(() => {
-    const storedUser = sessionStorage.getItem("userid");
-    if (storedUser) {
-      setIsLoggedIn(true);
-      setUserid(storedUser);
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (navRef.current && !navRef.current.contains(event.target)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    setUserid("DemoUser");
-    setStreak(10);
-    setBadge('silver');
-    setMenuOpen(false);
-    navigate("/login");
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserid("");
-    setMenuOpen(false);
-    navigate("/");
-  };
-
-  const navLinks = [
-    { name: "Journal", path: "/journal" },
-    { name: "Productivity", path: "/productivity" },
-    { name: "Analysis", path: "/analysis" },
-    { name: "Pomodoro", path: "/pomodo" },
-    { name: "Activity", path: "/activity" },
-    { name: "Review", path: "/review" },
-  ];
-
-  return (
-    <nav ref={navRef} className="bg-white/80 backdrop-blur-sm shadow-md px-4 sm:px-6 py-3 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <div onClick={() => navigate("/journal")} className="text-2xl font-bold text-gray-800 cursor-pointer">NeuroFlow</div>
-        <div className="hidden md:flex gap-6 lg:gap-8 text-gray-600 font-medium items-center">
-          {navLinks.map(link => <a key={link.name} href={link.path} className="hover:text-[#6a6ff2] transition-colors duration-200">{link.name}</a>)}
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-4">
-            {isLoggedIn ? (
-              <>
-                <div className="flex items-center gap-3 bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-2 rounded-full border border-purple-200">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-purple-700">{streak}</span>
-                    <span className="text-sm text-purple-600 font-medium">days</span>
-                  </div>
-                  <Badge type={badge} />
-                </div>
-                <div className="relative group cursor-pointer">
-                  <div onClick={() => navigate("/dashboard")} className="bg-[#838beb] text-white w-10 h-10 flex items-center justify-center rounded-full font-semibold text-lg uppercase">{userid?.charAt(0)}</div>
-                  <div className="absolute right-0 mt-2 w-32 bg-white shadow-lg rounded-md py-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition duration-200 z-50">
-                    <p className="px-4 py-1 text-sm text-gray-700 font-semibold truncate">{userid}</p>
-                    <hr className="my-1" />
-                    <button onClick={handleLogout} className="w-full text-left px-4 py-1 text-sm text-red-500 hover:bg-gray-100">Logout</button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <button onClick={handleLogin} className="bg-[#838beb] text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-300 font-semibold">Login</button>
-            )}
-          </div>
-          <div className="md:hidden flex items-center gap-3">
-            {isLoggedIn ? (
-              <>
-                <div className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 px-3 py-1.5 rounded-full border border-purple-200">
-                  <span className="text-base font-bold text-purple-700">{streak}</span>
-                  <Badge type={badge} />
-                </div>
-                <button onClick={() => setMenuOpen(!menuOpen)} className="text-2xl text-gray-700" aria-label="Open menu">{menuOpen ? <FaTimes /> : <FaBars />}</button>
-              </>
-            ) : (
-              <button onClick={() => setMenuOpen(!menuOpen)} className="text-2xl text-gray-700" aria-label="Open menu">{menuOpen ? <FaTimes /> : <FaBars />}</button>
-            )}
-          </div>
-        </div>
-      </div>
-      {menuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-lg flex flex-col gap-2 p-6 z-40 animate-slide-down">
-          {navLinks.map(link => <a key={link.name} href={link.path} onClick={() => setMenuOpen(false)} className="text-gray-700 hover:text-[#6a6ff2] p-2 rounded-md text-lg">{link.name}</a>)}
-          <hr className="my-4" />
-          {isLoggedIn ? (
-            <div>
-              <p className="text-gray-700 font-semibold mb-4 p-2 text-lg">Hi, {userid}</p>
-              <button onClick={handleLogout} className="w-full text-center px-4 py-2 text-md font-semibold text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors duration-200">Logout</button>
-            </div>
-          ) : (
-            <button onClick={handleLogin} className="w-full bg-[#838beb] text-white px-4 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 font-semibold text-lg">Login</button>
-          )}
-        </div>
-      )}
-    </nav>
-  );
-};
-
 
 // --- Color Palettes & Styling ---
 const EMOTION_COLORS = { happy: "#00C9A7", joy: "#38BDF8", sad: "#6A67CE", sadness: "#8B5CF6", anger: "#F87171", angry: "#EF4444", disgust: "#D946EF", fear: "#FB923C", surprise: "#FACC15", neutral: "#9CA3AF", none: "#64748B", default: "#A3E635" };
@@ -159,7 +26,8 @@ const Card = ({ children, className = '' }) => (
   </div>
 );
 
-const Tabs = ({ tabs }) => {
+
+const Tabs = ({ tabs,onTabClick }) => {
   const [activeTab, setActiveTab] = useState(Object.keys(tabs)[0]);
   return (
     <div>
@@ -168,7 +36,10 @@ const Tabs = ({ tabs }) => {
           {Object.keys(tabs).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                onTabClick?.(); //  <-- ✅ Call the function passed from the parent
+              }}
               className={`${
                 activeTab === tab
                   ? 'border-purple-500 text-purple-600'
@@ -192,39 +63,56 @@ const AnalysisPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const { successChimeRef, errorChimeRef, startChimeRef } = useChimes();
+
   useEffect(() => {
     const userId = sessionStorage.getItem("userid");
     if (!userId) {
       setError("User not found. Please log in again.");
       setLoading(false);
+      errorChimeRef.current?.play();
       return;
-    };
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      const mockData = {
-        labels_weekly: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        mood_trend_weekly: [0.2, -0.1, 0.5, 0.8, 0.3, -0.4, 0.6],
-        productivity_trend_weekly: [60, 75, 80, 90, 70, 50, 85],
-        mood_details_weekly: [{ emotion: 'neutral', score: 0.2 }, { emotion: 'sad', score: -0.1 }, { emotion: 'happy', score: 0.5 }, { emotion: 'joy', score: 0.8 }, { emotion: 'happy', score: 0.3 }, { emotion: 'anger', score: -0.4 }, { emotion: 'joy', score: 0.6 }],
-        all_emotions_weekly: { happy: 5, joy: 3, sad: 2, anger: 1, neutral: 4 },
-        labels_monthly: ["Week 1", "Week 2", "Week 3", "Week 4"],
-        mood_trend_monthly: [0.4, 0.6, 0.3, 0.5],
-        productivity_trend_monthly: [70, 85, 75, 80],
-        mood_details_monthly: [{ emotion: 'happy', score: 0.4 }, { emotion: 'joy', score: 0.6 }, { emotion: 'happy', score: 0.3 }, { emotion: 'joy', score: 0.5 }],
-        all_emotions_monthly: { happy: 15, joy: 12, sad: 8, anger: 4, neutral: 10, surprise: 2 },
-        correlation_details: { coefficient: 0.75, p_value: 0.04, significant: true, sample_size: 30, strength: "strong_positive" },
-        task_type_stats: { DO: 12, DECIDE: 5, DELEGATE: 3, DELETE: 2 },
-        growth_labels: ["Jan", "Feb", "Mar", "Apr"],
-        monthly_growth: [65, 70, 78, 82],
-        task_stats: { completed: 25, not_completed: 5, early: 10, on_time: 12, late: 3 },
-        time_allocated: 40,
-        time_used: 35.5,
-        ai_insights: ["You have a strong positive correlation between mood and productivity.", "Your 'Do' tasks are the most frequent. Consider delegating.", "You're most productive on Thursdays."]
-      };
-      setData(mockData);
-      setLoading(false);
-    }, 1500);
+    fetch("http://127.0.0.1:8000/api/analysis/?userid=" + userId)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch analytics");
+        return res.json();
+      })
+      .then((userData) => {
+        if (userData && Object.keys(userData).length > 0 && userData.correlation_details?.sample_size >= 5) {
+          setData(userData);
+          successChimeRef.current?.play();   // ✅ Play chime only here
+        } else {
+          setData(userData || {}); // still set data so render shows insufficient data screen
+        }
+      })
+      .catch((err) => {
+        setError(err.message);
+        toast.error("❌ " + err.message);
+        errorChimeRef.current?.play();
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
+
+  if (!loading && data && !hasEnoughData) {
+    errorChimeRef.current?.play()
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#f9f9fc] to-[#e6e6fa]">
+        <MainNavbar />
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)] text-center p-6">
+          <h1 className="text-3xl font-bold text-[#796fc1] mb-4">📉 Insufficient Data</h1>
+          <p className="text-lg text-gray-700 max-w-md mb-6">
+            You need at least 5 days of journaling and task tracking to unlock detailed analytics.
+          </p>
+          <p className="text-gray-500">Start logging your mood and productivity daily to enable this feature.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -523,7 +411,9 @@ const AnalysisPage = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-[#796fc1] text-center sm:text-left">Analytics Dashboard</h1>
           <div className="flex space-x-2">
             {["Weekly", "Monthly"].map(mode => (
-              <button key={mode} onClick={() => setViewMode(mode)} className={`px-4 py-2 sm:px-6 rounded-full font-semibold transition-all duration-300 border-b-4 ${viewMode === mode ? "bg-[#796fc1] text-white shadow-lg transform scale-105 border-[#a78bfa]" : "bg-white text-[#796fc1] hover:bg-[#f3e8ff] border-transparent"}`}>
+              <button key={mode} onClick={() => {setViewMode(mode);toast(`📊 Switched to ${mode} view`);
+              startChimeRef.current?.play();
+      }}  className={`px-4 py-2 sm:px-6 rounded-full font-semibold transition-all duration-300 border-b-4 ${viewMode === mode ? "bg-[#796fc1] text-white shadow-lg transform scale-105 border-[#a78bfa]" : "bg-white text-[#796fc1] hover:bg-[#f3e8ff] border-transparent"}`}>
                 {mode}
               </button>
             ))}

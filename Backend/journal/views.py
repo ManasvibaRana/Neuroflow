@@ -8,6 +8,7 @@ from django.utils.timezone import now
 from journalmedia.models import JournalImage
 from journalmedia.serializers import JournalImageSerializer
 from django.utils.timezone import localdate
+from users.utils import update_streak
 
 @api_view(["POST"])
 def analyze_journal_only(request):
@@ -44,7 +45,7 @@ def save_journal(request):
     highlight = analysis["highlight"]
 
     if journal:
-        # 🟢 Update existing
+        # Update existing
         journal.journal_text = journal_text
         journal.emotion_1 = emotions[0][0]
         journal.score_1 = emotions[0][1]
@@ -54,13 +55,10 @@ def save_journal(request):
         journal.score_3 = emotions[2][1] if len(emotions) > 2 else None
         journal.top_emotion_sentences = highlight
         journal.save()
+        message = "Journal updated successfully."
 
-        return Response({
-            "message": "Journal updated successfully.",
-            "journal_id": journal.id
-        })
     else:
-        # 🔵 Create new
+        # Create new
         journal = JournalEntry.objects.create(
             user=user,
             date=today,
@@ -72,11 +70,17 @@ def save_journal(request):
             score_3=emotions[2][1] if len(emotions) > 2 else None,
             top_emotion_sentences=highlight
         )
+        message = "Journal saved successfully."
 
-        return Response({
-            "message": "Journal saved successfully.",
-            "journal_id": journal.id
-        })
+    # 1. Activate the streak logic after any save or update.
+    update_streak(user)
+
+    # 2. Return the current streak in the response.
+    return Response({
+        "message": message,
+        "journal_id": journal.id,
+        "current_streak": user.streak  # Add this line
+    })
 
 @api_view(["GET"])
 def get_today_journal(request, userid):
