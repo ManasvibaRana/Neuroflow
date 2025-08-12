@@ -92,7 +92,7 @@ function MainNavbar() {
     { name: "Analysis", path: "/analysis" },
     { name: "Pomodoro", path: "/pomodo" },
     { name: "Activity", path: "/activity" },
-    { name: "Review", path: "/review" },
+    { name: "21 Days", path: "/21days" },
   ];
 
   return (

@@ -50,3 +50,73 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.animated-gradient {
+  background: linear-gradient(-45deg, #111827, #1f2937, #0d9488, #4f46e5);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-slow {
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 15px 5px rgba(168, 85, 247, 0.4);
+  }
+}
+
+@keyframes trophy-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.6));
+  }
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8));
+  }
+}
+.animate-trophy-pulse {
+    animation: trophy-pulse 2.5s ease-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); opacity: 0.4; }
+  50% { transform: translateY(-10px); opacity: 0.6; }
+  100% { transform: translateY(0px); opacity: 0.4; }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes floatCloud {
+  0% { transform: translate(-50%, -50%) translateX(0px); }
+  50% { transform: translate(-50%, -50%) translateX(10px); }
+  100% { transform: translate(-50%, -50%) translateX(0px); }
+}
+
+@keyframes waveFlag {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  50% { transform: translate(-50%, -50%) rotate(2deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
