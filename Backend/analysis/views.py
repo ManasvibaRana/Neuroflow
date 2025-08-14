@@ -1,6 +1,4 @@
-# analytics/views.py - Final Comprehensive Version
-# This version calculates ALL required data points in a single API call
-# to match the structure expected by the original frontend code.
+# analysis/views.py
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -15,6 +13,8 @@ import calendar
 from users.models import User
 from journal.models import JournalEntry
 from productivity.models import Productivity
+from habit_tracker.models import Habit, HabitJournal
+from habit_tracker.serializers import HabitSerializer # Import the serializer
 from django.utils.timezone import localdate
 
 def get_last_day_of_month(dt):
@@ -40,12 +40,44 @@ def analysis_view(request):
     today = date.today()
     valence_map = {'joy': 1, 'surprise': 0.5, 'sad': -1, 'anger': -1, 'fear': -1, 'disgust': -1, 'neutral': 0}
 
+    # --- Pre-fetch all relevant data for the user ---
+    all_journals = JournalEntry.objects.filter(user=user)
+    all_productivity = Productivity.objects.filter(user=user)
+    all_habits = Habit.objects.filter(user=user).prefetch_related('journal')
+
+    # --- Habit-Specific Analytics ---
+    completed_quests = all_habits.filter(completed=True).count()
+    active_quest = all_habits.filter(completed=False).first()
+    
+    abandoned_quests = 0
+    in_progress_quests = 0
+    abandonment_days = []
+
+    if active_quest:
+        is_abandoned = (today - active_quest.last_log_date).days > 1
+        if is_abandoned:
+            abandoned_quests += 1
+            abandonment_days.append(active_quest.current_day)
+        else:
+            in_progress_quests = 1
+
+    quest_completion_stats = {
+        "completed": completed_quests,
+        "in_progress": in_progress_quests,
+        "abandoned": abandoned_quests
+    }
+    
+    abandonment_histogram = Counter(abandonment_days)
+    
+    active_habit_progress = []
+    if active_quest:
+        logged_days = {j.day for j in active_quest.journal.all()}
+        active_habit_progress = [{"day": i, "completed": 1 if (i - 1) in logged_days else 0} for i in range(1, 22)]
+
+
     # --- 1. Weekly Data Calculation ---
     week_start = today - timedelta(days=6)
     labels_weekly = [(week_start + timedelta(days=i)).strftime("%a") for i in range(7)]
-    
-    journals_week = JournalEntry.objects.filter(user=user, date__range=(week_start, today))
-    productivity_week = Productivity.objects.filter(user=user, date__range=(week_start, today))
     
     mood_trend_weekly = []
     productivity_trend_weekly = []
@@ -53,16 +85,15 @@ def analysis_view(request):
 
     for i in range(7):
         day = week_start + timedelta(days=i)
-        journal = journals_week.filter(date=day).first()
+        journal = all_journals.filter(date=day).first()
         mood_score = get_mood_valence_score(getattr(journal, 'emotion_1', None), getattr(journal, 'score_1', 0), valence_map)
         mood_trend_weekly.append(round(mood_score, 2))
         mood_details_weekly.append({'emotion': getattr(journal, 'emotion_1', 'none'), 'score': getattr(journal, 'score_1', 0)})
         
-        prod_avg = productivity_week.filter(date=day).aggregate(avg=Avg('score'))['avg'] or 0
+        prod_avg = all_productivity.filter(date=day).aggregate(avg=Avg('score'))['avg'] or 0
         productivity_trend_weekly.append(round(prod_avg, 2))
 
     # --- 2. Monthly Data Calculation ---
-    # This calculates for the last 4 full months for historical charts
     labels_monthly = []
     mood_trend_monthly = []
     productivity_trend_monthly = []
@@ -79,18 +110,18 @@ def analysis_view(request):
         labels_monthly.insert(0, month_label)
         growth_labels.insert(0, month_start.strftime("%b"))
 
-        month_journals = JournalEntry.objects.filter(user=user, date__range=(month_start, month_end))
+        month_journals = all_journals.filter(date__range=(month_start, month_end))
         
         monthly_valence_scores = [get_mood_valence_score(j.emotion_1, j.score_1, valence_map) for j in month_journals]
         mood_avg = np.mean(monthly_valence_scores) if monthly_valence_scores else 0
         mood_trend_monthly.insert(0, round(mood_avg, 2))
 
-        prod_avg = Productivity.objects.filter(user=user, date__range=(month_start, month_end)).aggregate(avg=Avg('score'))['avg'] or 0
+        prod_avg = all_productivity.filter(date__range=(month_start, month_end)).aggregate(avg=Avg('score'))['avg'] or 0
         productivity_trend_monthly.insert(0, round(prod_avg, 2))
         monthly_growth.insert(0, round(prod_avg, 2))
 
         dominant_emotion = month_journals.values('emotion_1').annotate(count=Count('emotion_1')).order_by('-count').first()
-        mood_details_monthly.insert(0, {'emotion': dominant_emotion['emotion_1'] if dominant_emotion else 'none', 'score': 0}) # Score part is simplified
+        mood_details_monthly.insert(0, {'emotion': dominant_emotion['emotion_1'] if dominant_emotion else 'none', 'score': 0})
 
     # --- 3. Emotion Distributions ---
     def count_emotions(queryset):
@@ -99,35 +130,34 @@ def analysis_view(request):
             counts.setdefault(e, 0)
         return dict(counts)
     
+    journals_week = all_journals.filter(date__range=(week_start, today))
     all_emotions_weekly = count_emotions(journals_week)
-    current_month_journals = JournalEntry.objects.filter(user=user, date__year=today.year, date__month=today.month)
+    current_month_journals = all_journals.filter(date__year=today.year, date__month=today.month)
     all_emotions_monthly = count_emotions(current_month_journals)
 
     # --- 4. All-Time Statistics ---
-    all_tasks = Productivity.objects.filter(user=user)
-    completed_tasks = all_tasks.filter(status=True)
-    
+    completed_tasks = all_productivity.filter(status=True)
     task_stats = {
         'completed': completed_tasks.count(),
-        'not_completed': all_tasks.filter(status=False).count(),
+        'not_completed': all_productivity.filter(status=False).count(),
         'early': completed_tasks.filter(net_time__gt=timedelta(0)).count(),
         'on_time': completed_tasks.filter(net_time=timedelta(0)).count(),
         'late': completed_tasks.filter(net_time__lt=timedelta(0)).count(),
     }
 
-    task_type_stats = dict(Counter(all_tasks.values_list('type_of_task', flat=True)))
+    task_type_stats = dict(Counter(all_productivity.values_list('type_of_task', flat=True)))
     for t_type in ['DO', 'DECIDE', 'DELEGATE', 'DELETE']:
         task_type_stats.setdefault(t_type, 0)
 
-    total_ideal = all_tasks.aggregate(total=Sum('ideal_time'))['total'] or timedelta(0)
-    total_taken = all_tasks.aggregate(total=Sum('taken_time'))['total'] or timedelta(0)
+    total_ideal = all_productivity.aggregate(total=Sum('ideal_time'))['total'] or timedelta(0)
+    total_taken = all_productivity.aggregate(total=Sum('taken_time'))['total'] or timedelta(0)
     time_allocated = round(total_ideal.total_seconds() / 3600, 2)
     time_used = round(total_taken.total_seconds() / 3600, 2)
 
     # --- 5. Correlation ---
     corr_start = today - timedelta(days=29)
-    corr_journals = JournalEntry.objects.filter(user=user, date__range=(corr_start, today))
-    corr_prod = Productivity.objects.filter(user=user, date__range=(corr_start, today))
+    corr_journals = all_journals.filter(date__range=(corr_start, today))
+    corr_prod = all_productivity.filter(date__range=(corr_start, today))
     
     corr_prod_scores = defaultdict(list)
     for task in corr_prod: corr_prod_scores[task.date].append(task.score)
@@ -148,7 +178,11 @@ def analysis_view(request):
     ai_insights = generate_ai_insights(correlation_details, all_emotions_weekly)
 
     # --- 7. Final Response Payload ---
+    # **FIX**: Serialize and add the full `all_habits` list for the frontend
+    all_habits_serializer = HabitSerializer(all_habits, many=True)
+
     return Response({
+        'all_habits': all_habits_serializer.data, # <-- ADD THIS LINE
         'labels_weekly': labels_weekly,
         'mood_trend_weekly': mood_trend_weekly,
         'productivity_trend_weekly': productivity_trend_weekly,
@@ -165,13 +199,15 @@ def analysis_view(request):
         'task_type_stats': task_type_stats,
         'time_allocated': time_allocated,
         'time_used': time_used,
-        'correlation_score': correlation_details['coefficient'], # For legacy access
+        'correlation_score': correlation_details['coefficient'],
         'correlation_details': correlation_details,
         'ai_insights': ai_insights,
         'mood_stability_score': 100 - (np.std(mood_scores) * 100) if len(mood_scores) > 1 else 100,
+        'active_habit_progress': active_habit_progress,
+        'quest_completion_stats': quest_completion_stats,
+        'abandonment_histogram': dict(abandonment_histogram),
     })
 
-# --- Helper functions from before ---
 def get_correlation_strength(correlation):
     abs_corr = abs(correlation)
     if abs_corr < 0.2: return 'very_weak'

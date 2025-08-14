@@ -83,7 +83,7 @@ const AnalysisPage = () => {
       .then((userData) => {
         if (userData && Object.keys(userData).length > 0 && userData.correlation_details?.sample_size >= 5) {
           setData(userData);
-          successChimeRef.current?.play();   // ✅ Play chime only here
+          successChimeRef.current?.play();
         } else {
           setData(userData || {}); // still set data so render shows insufficient data screen
         }
@@ -274,6 +274,61 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
     );
   };
 
+  const HabitTabContent = () => {
+    const completedQuests = data.all_habits?.filter(h => h.completed) || [];
+
+    return (
+        <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Quest History Badges Card */}
+                <Card>
+                    <h2 className="text-xl font-semibold text-gray-700 mb-4">🏆 Quest History</h2>
+                    {completedQuests.length > 0 ? (
+                        <div className="flex flex-wrap gap-4">
+                            {completedQuests.map(quest => (
+                                <div key={quest.id} className="group relative flex flex-col items-center" title={quest.name}>
+                                    <div className="text-4xl bg-gray-200 p-3 rounded-full transition-transform group-hover:scale-110">
+                                        {quest.avatar || '⭐'}
+                                    </div>
+                                    <span className="text-xs text-gray-600 mt-1 truncate w-16 text-center">{quest.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-center">
+                            <p className="text-gray-500">Your completed quest badges will appear here!</p>
+                        </div>
+                    )}
+                </Card>
+
+                {/* Active Quest Progress Card */}
+                <Card>
+                    <h2 className="text-xl font-semibold text-gray-700 mb-4">🚀 Active Quest Progress</h2>
+                    {data.active_habit_progress && data.active_habit_progress.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={data.active_habit_progress} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="day" tickFormatter={(day) => `Day ${day}`} />
+                                <YAxis allowDecimals={false} domain={[0, 1]} tickFormatter={(tick) => tick === 1 ? 'Done' : ''} />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Bar dataKey="completed" name="Day Status" barSize={20}>
+                                    {data.active_habit_progress.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.completed ? "#10B981" : "#e5e7eb"} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-center">
+                            <p className="text-gray-500">No active quest. Start a new journey!</p>
+                        </div>
+                    )}
+                </Card>
+            </div>
+        </div>
+    );
+  };
+  
   const tabContent = {
     Overview: (
       <div className="space-y-8">
@@ -328,6 +383,8 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
         </Card>
       </div>
     ),
+    Productivity: <ProductivityTabContent />,
+    Habits: <HabitTabContent />,
     Patterns: (
       <div className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -387,7 +444,6 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
         </div>
       </Card>
     ),
-    Productivity: <ProductivityTabContent />,
   };
 
   const emotionEntries = Object.entries(viewMode === "Weekly" ? data.all_emotions_weekly : data.all_emotions_monthly);

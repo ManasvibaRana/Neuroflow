@@ -10,6 +10,7 @@ import UserDashboard from "./Dashboard/UserDashboard";
 import Activity from "./Activity/ActivityPage";
 import PendingTasks from "./Productivity/PendingTasks";
 import AnalysisPage from "./Analysis/AnalysisPage"
+import HabitJourneyApp from './21Days/JourneyPage';
 import { Toaster } from 'sonner';
 
 import {
@@ -56,6 +57,7 @@ export function App() {
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/activity" element={<Activity />} />
             <Route path="/analysis" element={<AnalysisPage/>} />
+            <Route path="/21days" element={<HabitJourneyApp/>} />
             <Route path="/pending-tasks" element={<PendingTasks />} />
             <Route path="/productivity" element={<Productivity />} />
             <Route path="/dashboard" element={<UserDashboard />} />
