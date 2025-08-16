@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from .models import Habit, HabitJournal
 from .serializers import HabitSerializer
 from users.models import User
-from datetime import date, timedelta
+from datetime import date
 
 # Define the details for predefined habit packs
 PREDEFINED_HABIT_PACKS = {
@@ -46,6 +46,8 @@ class HabitViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """
         Creates a new habit.
+        For predefined quests, it populates the details from a local dictionary.
+        For custom quests, it relies on the frontend to send all details.
         """
         user_id = self.request.data.get('user_id')
         pack_id = self.request.data.get('pack_id')
@@ -58,60 +60,30 @@ class HabitViewSet(viewsets.ModelViewSet):
         if Habit.objects.filter(user=user, completed=False).exists():
             raise serializers.ValidationError({"detail": "An active habit already exists."})
 
+        # Prepare extra data to be injected into the save call for predefined packs
         extra_data = {}
         if pack_id in PREDEFINED_HABIT_PACKS:
             pack_details = PREDEFINED_HABIT_PACKS[pack_id]
-            extra_data.update(pack_details)
+            extra_data['name'] = pack_details['name']
+            extra_data['description'] = pack_details['description']
+            extra_data['avatar'] = pack_details['avatar']
+            extra_data['theme'] = pack_details['theme']
         
-        # Set last_log_date to yesterday to allow logging on day 1
+        # The serializer uses validated_data from the request.
+        # We supplement this with user, dates, and predefined pack details.
         serializer.save(
             user=user,
             start_date=date.today(),
-            last_log_date=date.today() - timedelta(days=1),
-            lives=3,
+            last_log_date=date.today(),
             **extra_data
         )
 
     def update(self, request, *args, **kwargs):
-        """
-        Updates a habit, handles daily logging, and manages lives.
-        """
         instance = self.get_object()
         journal_data = request.data.get('journal')
-        current_day_from_request = request.data.get('current_day', instance.current_day)
-
-        reset_flag = False  # Track if reset happened
+        current_day = request.data.get('current_day', instance.current_day)
 
         if journal_data:
-            days_missed = (date.today() - instance.last_log_date).days
-
-            # 1. Enforce one log per day
-            if days_missed == 0:
-                return Response({"detail": "You can only log once per day."}, status=status.HTTP_400_BAD_REQUEST)
-
-            # 2. Lose 1 life if ANY day(s) missed
-            if days_missed > 1:
-                instance.lives -= 1
-
-            # 3. If lives drop to 0 or below after loss → reset immediately
-            if instance.lives <= 0:
-                instance.current_day = 0
-                instance.lives = 3
-                instance.journal.all().delete()
-                instance.start_date = date.today()
-                instance.last_log_date = date.today() - timedelta(days=1)
-                instance.save()
-                reset_flag = True
-                serializer = self.get_serializer(instance)
-                data = serializer.data
-                data["reset"] = True
-                return Response(data, status=status.HTTP_200_OK)
-
-            # 4. Gain a life on milestones (even if you just lost one above)
-            if current_day_from_request in [7, 14, 20] and instance.lives < 3:
-                instance.lives += 1
-
-            # 5. Save journal entry
             for entry_data in journal_data:
                 day = entry_data.get('day')
                 entry = entry_data.get('entry')
@@ -122,20 +94,15 @@ class HabitViewSet(viewsets.ModelViewSet):
                         defaults={'entry': entry}
                     )
 
-            instance.last_log_date = date.today()
+        instance.last_log_date = date.today()
+        instance.current_day = current_day
 
-        # 6. Update current day
-        instance.current_day = current_day_from_request
-
-        # 7. Mark completed if >= 21
         if instance.current_day >= 21:
             instance.completed = True
 
         instance.save()
         serializer = self.get_serializer(instance)
-        data = serializer.data
-        data["reset"] = reset_flag
-        return Response(data)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def restart(self, request, pk=None):
@@ -151,16 +118,14 @@ class HabitViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Clear old journal entries
+            # Erase previous log entries
             habit_to_restart.journal.all().delete()
 
-            # Reset habit attributes
+            # Reset the habit's state
             habit_to_restart.start_date = date.today()
-            # **FIXED**: Set last_log_date to yesterday to allow logging on the first day
-            habit_to_restart.last_log_date = date.today() - timedelta(days=1)
+            habit_to_restart.last_log_date = date.today()
             habit_to_restart.current_day = 0
             habit_to_restart.completed = False
-            habit_to_restart.lives = 3
             
             habit_to_restart.save()
 
