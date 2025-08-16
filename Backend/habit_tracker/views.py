@@ -164,6 +164,7 @@ class HabitViewSet(viewsets.ModelViewSet):
             
             habit_to_restart.save()
 
+
             serializer = self.get_serializer(habit_to_restart)
             return Response(serializer.data, status=status.HTTP_200_OK)
 

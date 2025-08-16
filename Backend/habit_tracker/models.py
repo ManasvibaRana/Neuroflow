@@ -26,3 +26,4 @@ class HabitJournal(models.Model):
 
     class Meta:
         unique_together = ('habit', 'day')
+        

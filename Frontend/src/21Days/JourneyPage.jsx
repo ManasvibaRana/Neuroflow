@@ -1184,6 +1184,8 @@ const ModalBackdrop = ({ children, onClick }) => (
   </motion.div>
 );
 
+
+
 const ModalContent = ({ children, className }) => (
   <motion.div
     className={`relative bg-white/80 backdrop-blur-2xl border border-purple-200/50 shadow-2xl shadow-purple-400/20 ring-2 ring-purple-300/30 rounded-2xl p-6 w-full max-w-md text-slate-800 ${className} overflow-hidden`}

@@ -9,6 +9,7 @@ class HabitJournalSerializer(serializers.ModelSerializer):
 class HabitSerializer(serializers.ModelSerializer):
     journal = HabitJournalSerializer(many=True, read_only=True)
 
+
     class Meta:
         model = Habit
         fields = '__all__'

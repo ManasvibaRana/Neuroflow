@@ -224,3 +224,4 @@ def generate_ai_insights(correlation_details, emotions):
         dominant_emotion = max(emotions.items(), key=lambda x: x[1])[0]
         insights.append(f"'{dominant_emotion.title()}' was your most frequent emotion this week.")
     return insights
+
