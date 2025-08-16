@@ -93,6 +93,8 @@ function MainNavbar() {
     { name: "Pomodoro", path: "/pomodo" },
     { name: "Activity", path: "/activity" },
     { name: "21 Days", path: "/21days" },
+    { name: "Community", path: "/community" },
+
   ];
 
   return (
