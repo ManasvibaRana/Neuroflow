@@ -12,6 +12,7 @@ import PendingTasks from "./Productivity/PendingTasks";
 import AnalysisPage from "./Analysis/AnalysisPage"
 import HabitJourneyApp from './21Days/JourneyPage';
 import { Toaster } from 'sonner';
+import CommunityPage from "./Community/CommunityPage";
 
 import {
   BrowserRouter,
@@ -61,6 +62,8 @@ export function App() {
             <Route path="/pending-tasks" element={<PendingTasks />} />
             <Route path="/productivity" element={<Productivity />} />
             <Route path="/dashboard" element={<UserDashboard />} />
+           <Route path="/Community" element={<CommunityPage/>}/>
+
           </Route>
         </Routes>
       </div>
