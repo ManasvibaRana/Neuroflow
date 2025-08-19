@@ -320,14 +320,15 @@ const EisenhowerMatrix = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 font-mono bg-white min-h-screen relative">
-      <h1 className="text-3xl mb-2 font-bold">TO-DO List</h1>
+    <div   className="flex flex-col items-center justify-center px-4 font-mono mt-1/8 bg-white min-h-screen relative"
+      style={{ backgroundColor: "#838beb/50" }} >
+     <h1 className="text-3xl mb-2 font-bold">TO-DO List</h1>
       <p className="text-lg font-bold text-green-700 mb-2">
         ✅ Total Score: {totalScore}%
       </p>
       <p className="text-sm text-gray-600 italic mb-4">{quote}</p>
 
-      <div className="flex flex-wrap gap-2 w-full max-w-4xl mb-8 items-center">
+      <div className="flex flex-wrap gap-2 w-full max-w-4xl mb-8 items-center relative">
         <input
           type="text"
           placeholder="Add task..."
@@ -395,6 +396,29 @@ const EisenhowerMatrix = () => {
           Add
         </button>
       </div>
+       
+       {/* Axis Labels */}
+      <div className="relative max-w-5xl w-full mt-10">
+        <div className="hidden md:flex absolute top-[-4.5rem] left-0 right-0 justify-center text-sm font-semibold mt-6">
+          <div className="flex justify-around w-full max-w-4xl">
+            <div className="bg-gray-200 p-2 rounded-md w-1/2 text-center mr-2">
+              Urgent
+            </div>
+            <div className="bg-gray-200 p-2 rounded-md w-1/2 text-center ml-2">
+              Not Urgent
+            </div>
+          </div>
+        </div>
+
+        <div className="hidden md:flex absolute top-0 bottom-0 left-0 flex-col justify-between text-sm font-semibold h-full py-1 translate-x-[-3rem]">
+          <div className="bg-gray-200 p-2 py-2 rounded-md transform -rotate-90 origin-top-left whitespace-nowrap mt-44 text-center px-12">
+            Important
+          </div>
+          <div className="bg-gray-200 p-2 rounded-md transform -rotate-90 origin-top-left py-2 whitespace-nowrap mt-48 text-center px-12">
+            Not Important
+          </div>
+      </div>
+
 
       {showPendingButton && (
         <button
@@ -404,6 +428,7 @@ const EisenhowerMatrix = () => {
           View Pending Tasks
         </button>
       )}
+
 
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4">
@@ -471,6 +496,8 @@ const EisenhowerMatrix = () => {
           ))}
         </div>
       </DragDropContext>
+    </div>
+
 
       {showTookModal && (
         <div className="fixed inset-0 flex justify-center items-center z-50 bg-black bg-opacity-30">
@@ -509,6 +536,7 @@ const EisenhowerMatrix = () => {
                 Confirm
               </button>
             </div>
+            
           </div>
         </div>
       )}

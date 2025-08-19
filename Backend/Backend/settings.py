@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     'journalmedia',
     'productivity',
     'habit_tracker',
+    'community',
+    'analysis',
 ]
 
 MIDDLEWARE = [

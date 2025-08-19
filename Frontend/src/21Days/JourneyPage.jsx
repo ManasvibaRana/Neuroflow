@@ -2,8 +2,9 @@ import React, { useState, useRef, useLayoutEffect, useEffect, useCallback } from
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiStar, FiPlusCircle,FiAlertTriangle  } from 'react-icons/fi';
-import MainNavbar from '../Navbar.jsx'; // Make sure you have a Navbar component at this path
-import useChimes from '../usechimes.js'; // Make sure you have the useChimes hook at this path
+import MainNavbar from '../Navbar.jsx'; 
+import useChimes from '../usechimes.js'; 
+import { toast } from "sonner"; 
 
 // --- MOTIVATIONAL QUOTES ---
 const journeyQuotes = [
@@ -498,7 +499,8 @@ const handleStart = async (packData) => {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       if (err.detail === "An active habit already exists.") {
-        alert("You already have a quest in progress! You must complete or abandon it before starting a new one.");
+        toast.info("You already have a quest in progress! You must complete or abandon it before starting a new one.");
+        errorChimeRef.current?.play();
       }
       throw new Error(err.detail || "Failed to create habit.");
     }
@@ -899,7 +901,8 @@ useLayoutEffect(() => {
         }
     } catch (err) {
         console.error("Failed to update habit:", err);
-        alert(`Error: ${err.message}`);
+        toast.info(`Error: ${err.message}`);
+        errorChimeRef.current?.play();
         setActiveModal(null);
     }
   };
