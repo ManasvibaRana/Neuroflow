@@ -8,6 +8,8 @@ import NewPostForm from "./NewPostForm";
 import PostCard from "./PostCard";
 import CommunitySidebar from "./CommunitySidebar";
 import { Heart, Smile, Cloud, Leaf, Moon, Sparkles } from "lucide-react";
+import Navbar from "/src/Navbar";
+
 
 const API = axios.create({
   baseURL: "http://127.0.0.1:8000/community/",
@@ -174,7 +176,11 @@ export default function CommunityPage() {
   }, [posts, filterMood, sortBy]);
 
   return (
+    <>
+    <Navbar/>
+
     <div className="min-h-screen bg-gradient-to-br from-[#f3f4ff] to-[#e7eaf7] py-8 px-4 sm:px-6 lg:px-8">
+
       <div className="max-w-6xl mx-auto space-y-8">
         <CommunityHeader />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -212,5 +218,6 @@ export default function CommunityPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

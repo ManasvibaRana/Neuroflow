@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'productivity',
     'habit_tracker',
     'community',
+    'analysis',
 ]
 
 MIDDLEWARE = [

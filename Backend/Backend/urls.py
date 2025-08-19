@@ -13,5 +13,7 @@ urlpatterns = [
     path("productivity/", include('productivity.urls'),name='productivity'),
     path('api/analysis/', include('analysis.urls')),
     path('api/habit/', include('habit_tracker.urls')),
-    path('community/',include('community.urls'))
+    path('community/',include('community.urls')),
+   
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

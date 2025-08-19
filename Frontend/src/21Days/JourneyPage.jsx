@@ -2,8 +2,9 @@ import React, { useState, useRef, useLayoutEffect, useEffect, useCallback } from
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiStar, FiPlusCircle,FiAlertTriangle  } from 'react-icons/fi';
-import MainNavbar from '../Navbar.jsx'; // Make sure you have a Navbar component at this path
-import useChimes from '../usechimes.js'; // Make sure you have the useChimes hook at this path
+import MainNavbar from '../Navbar.jsx'; 
+import useChimes from '../usechimes.js'; 
+import { toast } from "sonner"; 
 
 // --- MOTIVATIONAL QUOTES ---
 const journeyQuotes = [
@@ -429,7 +430,6 @@ export default function HabitJourneyApp() {
   const [allHabits, setAllHabits] = useState([]);
   const [activeHabit, setActiveHabit] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showRestartModal, setShowRestartModal] = useState(false);
   const { startChimeRef, successChimeRef, errorChimeRef } = useChimes();
 
   const fetchHabits = async () => {
@@ -445,13 +445,11 @@ export default function HabitJourneyApp() {
       });
       const data = await res.json();
       
-      // --- DEBUG LOG ---
       console.log("1. [fetchHabits] Data received from server:", data);
 
       setAllHabits(data || []);
       const currentHabit = data.find(h => !h.completed);
 
-      // --- DEBUG LOG ---
       console.log("2. [fetchHabits] Found active habit:", currentHabit);
 
       setActiveHabit(currentHabit || null);
@@ -500,6 +498,10 @@ const handleStart = async (packData) => {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
+      if (err.detail === "An active habit already exists.") {
+        toast.info("You already have a quest in progress! You must complete or abandon it before starting a new one.");
+        errorChimeRef.current?.play();
+      }
       throw new Error(err.detail || "Failed to create habit.");
     }
 
@@ -513,7 +515,7 @@ const handleStart = async (packData) => {
 };
 
 const handleAbandon = async (habitId) => {
-  const userId = sessionStorage.getItem('userid'); // ✅ from sessionStorage
+  const userId = sessionStorage.getItem('userid');
 
   if (!userId) {
     console.error("No user_id found in sessionStorage. Cannot delete habit.");
@@ -521,13 +523,9 @@ const handleAbandon = async (habitId) => {
   }
 
   try {
-    console.log(`[handleAbandon] Attempting to delete habit with ID: ${habitId}`);
-
     const response = await fetch(`http://127.0.0.1:8000/api/habit/habits/${habitId}/?user_id=${userId}`, {
       method: 'DELETE',
     });
-
-    console.log(`[handleAbandon] DELETE response status: ${response.status}`);
 
     if (!response.ok) {
       console.error(`Failed to abandon habit: ${response.status}`);
@@ -541,18 +539,6 @@ const handleAbandon = async (habitId) => {
     console.error("Failed to abandon habit due to a network error:", error);
   }
 };
-
-  useEffect(() => {
-    if (activeHabit && !activeHabit.viewMode) {
-      const lastLog = new Date(activeHabit.last_log_date);
-      const today = new Date();
-      const diffDays = Math.floor((today.setHours(0, 0, 0, 0) - lastLog.setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24));
-      if (diffDays > 1) {
-          errorChimeRef.current?.play();
-          setShowRestartModal(true);
-      }
-    }
-  }, [activeHabit, errorChimeRef]);
 
   if (isLoading) {
     return <div className="h-screen w-full flex items-center justify-center bg-slate-50"><p className="text-purple-600 font-medium">Loading your journey...</p></div>;
@@ -583,7 +569,6 @@ const handleAbandon = async (habitId) => {
           </motion.div>
         )}
       </AnimatePresence>
-      {showRestartModal && activeHabit && <RestartModal onRestart={() => handleAbandon(activeHabit.id)} onClose={() => setShowRestartModal(false)} />}
     </div>
   );
 }
@@ -598,7 +583,6 @@ function HabitSetup({ onStart, allHabits }) {
 
   const customQuests = allHabits.filter(h => h.pack_id.startsWith("custom_"));
 
-  // Inside HabitSetup, after the state declarations...
   const handleRestart = async (quest) => {
       const userId = sessionStorage.getItem("userid");
       if (!userId) {
@@ -623,7 +607,6 @@ function HabitSetup({ onStart, allHabits }) {
               throw new Error(err.detail || "Failed to restart quest.");
           }
           
-          // Reload the page to fetch the new active quest state
           window.location.reload(); 
 
       } catch (err) {
@@ -662,7 +645,6 @@ function HabitSetup({ onStart, allHabits }) {
               return (
                 <motion.button
                   key={pack.id}
-                  // ... inside the .map for predefined quests
                 onClick={() => {
                   if (isCompleted) {
                     setSelectedCompletedQuest({
@@ -673,7 +655,6 @@ function HabitSetup({ onStart, allHabits }) {
                       pack_id: pack.id
                     });
                   } else {
-                    // Pass the full pack object to onStart
                     onStart({
                       pack_id: pack.id,
                       name: pack.name,
@@ -801,8 +782,26 @@ function JourneyMap({ habit, onUpdate, onComplete, onAbandon, successChimeRef })
     }
   }, []);
 
-  useLayoutEffect(() => {
+// --- CORRECTED CODE ---
+
+// This effect handles showing the 'Quest Rules' modal.
+// It runs only when the 'habit' object changes.
+useEffect(() => {
+    if (
+        habit &&
+        new Date(habit.start_date).toDateString() === new Date().toDateString() &&
+        habit.current_day === 0 &&
+        !habit.reset // ✅ Prevent showing on restart
+    ) {
+        setActiveModal('questRules');
+    }
+}, [habit]);
+
+// This effect handles the visual layout and path drawing.
+// It runs when the component mounts and whenever the current day changes.
+useLayoutEffect(() => {
     if (!mapRef.current) return;
+
     const mapWidth = mapRef.current.offsetWidth;
     const mapHeight = mapRef.current.offsetHeight;
     const nodesPerRow = 3;
@@ -812,13 +811,13 @@ function JourneyMap({ habit, onUpdate, onComplete, onAbandon, successChimeRef })
     let points = [];
 
     for (let i = 0; i < totalDays; i++) {
-      const row = Math.floor(i / nodesPerRow);
-      const col = i % nodesPerRow;
-      const xOffset = Math.sin(i / 2) * 20;
-      let x = (row % 2 === 0) ? horizontalGap * (col + 1) : mapWidth - (horizontalGap * (col + 1));
-      x += xOffset;
-      const y = mapHeight - (row * verticalGap) - bottomPadding;
-      points.push({ x, y });
+        const row = Math.floor(i / nodesPerRow);
+        const col = i % nodesPerRow;
+        const xOffset = Math.sin(i / 2) * 20;
+        let x = (row % 2 === 0) ? horizontalGap * (col + 1) : mapWidth - (horizontalGap * (col + 1));
+        x += xOffset;
+        const y = mapHeight - (row * verticalGap) - bottomPadding;
+        points.push({ x, y });
     }
     pathPoints.current = points;
 
@@ -844,9 +843,10 @@ function JourneyMap({ habit, onUpdate, onComplete, onAbandon, successChimeRef })
     const currentPoint = tempPath.getPointAtLength(length * progress);
     setPlayerPos({ x: currentPoint.x, y: currentPoint.y });
 
-  }, [habit.current_day, totalDays]);
+}, [habit.current_day, totalDays]); // Dependency array is correct for this hook
 
   const handleCompleteDay = async (journalText) => {
+    const oldLives = habit.lives;
     const nextDay = habit.current_day + 1;
     try {
         const res = await fetch(`http://127.0.0.1:8000/api/habit/habits/${habit.id}/`, {
@@ -857,19 +857,53 @@ function JourneyMap({ habit, onUpdate, onComplete, onAbandon, successChimeRef })
                 journal: [{ day: habit.current_day, entry: journalText }]
             })
         });
-        const updatedHabit = await res.json();
+
+        const responseData = await res.json();
+
+        if (!res.ok) {
+            throw new Error(responseData.detail || "An error occurred while logging your day.");
+        }
+        
+        const updatedHabit = responseData;
+
         onUpdate(updatedHabit);
-        setActiveModal(null);
-        launchConfetti();
-        successChimeRef.current?.play();
+        // ✅ Show quest completion modal
         if (updatedHabit.completed) {
-          setTimeout(() => setActiveModal('journeyComplete'), 1500);
-        } else if (pack.milestones && pack.milestones[nextDay]) {
-          setModalData({ day: nextDay });
-          setTimeout(() => setActiveModal('milestone'), 800);
+            setActiveModal('questComplete');
+            return;
+        }
+        setActiveModal(null);
+
+        // Check if the quest was reset by the backend
+       // ✅ Life gain / milestone separation
+        if (updatedHabit.reset) {
+            setActiveModal('gameOver');
+            return;
+        } else if (updatedHabit.lives > oldLives) {
+            setModalData({ type: 'lifeGain' });
+            setTimeout(() => setActiveModal('lifeGain'), 300);
+        } else if (
+            pack.milestones &&
+            pack.milestones[nextDay] &&
+            updatedHabit.lives === oldLives // milestone modal only if no life gain
+        ) {
+            setModalData({ day: nextDay });
+            setTimeout(() => setActiveModal('milestone'), 800);
+        } else if (updatedHabit.lives < oldLives) {
+            setModalData({ type: 'lifeLoss' });
+            setTimeout(() => setActiveModal('lifeLoss'), 300);
+        }
+
+        // ✅ Game Over check
+        if (updatedHabit.current_day === 0 && updatedHabit.lives === 3 && oldLives > 0) {
+            setActiveModal('gameOver');
+            return;
         }
     } catch (err) {
         console.error("Failed to update habit:", err);
+        toast.info(`Error: ${err.message}`);
+        errorChimeRef.current?.play();
+        setActiveModal(null);
     }
   };
   
@@ -881,11 +915,66 @@ function JourneyMap({ habit, onUpdate, onComplete, onAbandon, successChimeRef })
         <Sparkles density={20} color={theme.sparkleColor} fadeOut={true} />
         <div className="w-full max-w-4xl mx-auto px-4 py-8 relative">
           <div className="text-center mb-0 relative z-20 pt-12">
+              <div className="flex justify-center items-center space-x-1 mb-2">
+                  <div className="fixed top-4 right-4 z-[9999] bg-white shadow-lg rounded-full px-3 py-2 flex space-x-1 border border-gray-200">
+                      <p className="font-semibold text-slate-800">Lives: </p>
+                      {Array.from({ length: 3 }).map((_, index) => (
+                          <motion.span
+                              key={index}
+                              initial={{ scale: 0.8, opacity: 0.7 }}
+                              animate={{
+                                  scale: index < habit.lives ? 1.2 : 0.8,
+                                  opacity: index < habit.lives ? 1 : 0.3
+                              }}
+                              transition={{ duration: 0.3 }}
+                              className={index < habit.lives ? 'text-red-500' : 'text-gray-300'}
+                          >
+                              ❤️
+                          </motion.span>
+                      ))}
+                  </div>
+              </div>
               <h2 className="font-semibold text-slate-800 text-xl">{pack.name}</h2>
               <p className="text-sm text-slate-500">
                 Day {Math.min(habit.current_day + 1, totalDays)} / {totalDays}
               </p>
 
+              {activeModal === 'questComplete' && (
+                  <ModalBackdrop onClick={() => setActiveModal(null)}>
+                      <ModalContent className="text-center">
+                          <h2 className="text-3xl font-bold text-purple-600">🎉 Quest Completed!</h2>
+                          <p className="text-slate-600 mb-4">Congratulations! You reached Day 21 and finished your journey!</p>
+                          <button
+                              onClick={() => window.location.reload()}
+                              className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                          >
+                              Start New Quest
+                          </button>
+                      </ModalContent>
+                  </ModalBackdrop>
+              )}
+
+              {activeModal === 'questRules' && (
+                  <ModalBackdrop onClick={() => setActiveModal(null)}>
+                      <ModalContent className="text-center max-w-md">
+                          <h2 className="text-2xl font-bold text-blue-600">📜 Quest Rules</h2>
+                          <ul className="text-left text-slate-700 mt-3 list-disc list-inside">
+                              <li>You have 3 ❤️ lives for the whole 21-day quest.</li>
+                              <li>Miss a day = lose 1 ❤️.</li>
+                              <li>Lose all ❤️ and you restart from Day 1.</li>
+                              <li>Milestones (Day 7, 14, 20) may give you a ❤️ if you have less than 3.</li>
+                              <li>Complete all 21 days to finish the quest!</li>
+                          </ul>
+                          <button
+                              onClick={() => setActiveModal(null)}
+                              className="mt-4 px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                          >
+                              Let’s Go!
+                          </button>
+                      </ModalContent>
+                  </ModalBackdrop>
+              )}
+          
               {habit.viewMode && (
                 <div className="mt-4 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg inline-block">
                   Viewing past journey — This quest is complete.
@@ -1043,6 +1132,39 @@ function JourneyMap({ habit, onUpdate, onComplete, onAbandon, successChimeRef })
                     {activeModal === 'journeyComplete' && <JourneyCompleteModal packName={pack.name} onStartNew={onComplete} onClose={onComplete} />}
                 </ModalBackdrop>
             )}
+                {activeModal === 'lifeGain' && (
+                    <ModalBackdrop onClick={() => setActiveModal(null)}>
+                        <ModalContent className="text-center">
+                            <h2 className="text-2xl font-bold text-green-600">+1 Life!</h2>
+                            <p className="text-slate-600">Milestone reached — you’ve earned a heart ❤️</p>
+                        </ModalContent>
+                    </ModalBackdrop>
+                )}
+
+                {activeModal === 'lifeLoss' && (
+                    <ModalBackdrop onClick={() => setActiveModal(null)}>
+                        <ModalContent className="text-center">
+                            <h2 className="text-2xl font-bold text-red-600">Life Lost 💔</h2>
+                            <p className="text-slate-600">You missed a day! Only {habit.lives} lives left.</p>
+                        </ModalContent>
+                    </ModalBackdrop>
+                )}
+
+                {activeModal === 'gameOver' && (
+                    <ModalBackdrop onClick={() => setActiveModal(null)}>
+                        <ModalContent className="text-center">
+                            <h2 className="text-3xl font-bold text-red-600">Game Over!</h2>
+                            <p className="text-slate-600 mb-4">You ran out of lives. Your quest has been reset to Day 1.</p>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                            >
+                                Start Again
+                            </button>
+                        </ModalContent>
+                    </ModalBackdrop>
+                )}
+
              {showAbandonConfirm && (
                 <ConfirmAbandonModal
                     questName={pack.name}
@@ -1058,14 +1180,14 @@ function JourneyMap({ habit, onUpdate, onComplete, onAbandon, successChimeRef })
   );
 }
 
-
 // --- MODAL COMPONENTS ---
-// ... All modal components (ModalBackdrop, ModalContent, Toast, RestartModal, JournalModal, MilestoneModal, LogbookModal, JourneyCompleteModal, CustomQuestModal) remain the same.
 const ModalBackdrop = ({ children, onClick }) => (
   <motion.div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClick}>
     {children}
   </motion.div>
 );
+
+
 
 const ModalContent = ({ children, className }) => (
   <motion.div
@@ -1080,30 +1202,6 @@ const ModalContent = ({ children, className }) => (
     {children}
   </motion.div>
 );
-
-function Toast({ message, onClose }) {
-  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
-  return (
-    <motion.div className="fixed bottom-5 right-5 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-purple-300/50 z-50" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}>
-      {message}
-    </motion.div>
-  );
-}
-
-function RestartModal({ onRestart, onClose }) {
-  return (
-    <ModalBackdrop onClick={onClose}>
-      <ModalContent className="text-center">
-        <h2 className="text-2xl font-bold text-red-600 mb-2 pt-2">Chain Broken</h2>
-        <p className="text-slate-600 mb-6">Momentum is key. You've missed a day, breaking the chain. A new journey awaits.</p>
-        <div className="flex justify-center space-x-4">
-          <button onClick={onClose} className="px-6 py-2 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 transition">Cancel</button>
-          <button onClick={onRestart} className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Abandon Quest</button>
-        </div>
-      </ModalContent>
-    </ModalBackdrop>
-  );
-}
 
 function JournalModal({ day, onClose, onComplete }) {
   const [text, setText] = useState('');
