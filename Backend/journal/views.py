@@ -10,6 +10,8 @@ from journalmedia.serializers import JournalImageSerializer
 from django.utils.timezone import localdate
 from users.utils import update_streak
 
+from django.utils.dateparse import parse_date
+
 @api_view(["POST"])
 def analyze_journal_only(request):
     journal_text = request.data.get("text", "")
@@ -90,6 +92,7 @@ def get_today_journal(request, userid):
         return Response({"error": "Invalid user ID."}, status=401)
 
     today = now().date()
+    print(today)
     journal = JournalEntry.objects.filter(user=user, date=today).first()
 
     if not journal:
@@ -108,4 +111,37 @@ def get_today_journal(request, userid):
         ],
         "highlight": journal.top_emotion_sentences,
         "images": image_data  # 👈 send images
+    })
+
+
+@api_view(["GET"])
+def get_journal_history(request, userid, date_str):
+    try:
+        user = User.objects.get(userid=userid)
+    except User.DoesNotExist:
+        return Response({"error": "Invalid user ID or username."}, status=401)
+
+    selected_date = parse_date(date_str)
+    if not selected_date:
+        return Response({"error": "Invalid date format in URL, expected YYYY-MM-DD"}, status=400)
+
+    # Use prefetch_related for a more efficient database query
+    journal = JournalEntry.objects.prefetch_related('images').filter(user=user, date=selected_date).first()
+    
+    if not journal:
+        return Response({"message": "No journal found for this date."}, status=404)
+
+    # V V V THIS IS THE NEW PART V V V
+    # Get the images that were efficiently fetched with prefetch_related
+    images = journal.images.all()
+    image_data = JournalImageSerializer(images, many=True).data
+
+    # Now, we build the final response including the image data
+    return Response({
+        "id": journal.id,
+        "created_at": journal.created_at,
+        "text": journal.journal_text,
+        "emotion_emoji": journal.emotion_1,
+        "theme": journal.emotion_1,
+        "images": image_data  # <-- And add the images here
     })

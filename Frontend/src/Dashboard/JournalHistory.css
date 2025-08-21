@@ -1,0 +1,61 @@
+.journal-history-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
+.history-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.calendar-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.history-entry {
+  margin-top: 20px;
+}
+
+.journal-card {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.journal-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.journal-date {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.journal-emoji {
+  font-size: 1.5rem;
+}
+
+.journal-text {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.journal-theme {
+  font-size: 0.9rem;
+  color: gray;
+}
+
+.no-entry {
+  text-align: center;
+  font-size: 1.2rem;
+  color: gray;
+}

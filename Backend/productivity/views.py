@@ -5,6 +5,9 @@ from django.utils import timezone
 from .models import Productivity
 from .serializers import ProductivitySerializer
 from users.utils import update_streak # 1. Import the streak function
+from rest_framework.decorators import api_view
+from django.utils.dateparse import parse_date
+from users.models import User 
 
 class ProductivityViewSet(viewsets.ModelViewSet):
     queryset = Productivity.objects.all()
@@ -56,3 +59,32 @@ class ProductivityViewSet(viewsets.ModelViewSet):
         response_data['current_streak'] = instance.user.streak
 
         return Response(response_data)
+    
+
+
+
+@api_view(["GET"])
+def get_productivity_history(request, userid, date_str):
+    try:
+        user = User.objects.get(userid=userid)
+    except User.DoesNotExist:
+        return Response({"error": "Invalid user ID."}, status=401)
+
+    selected_date = parse_date(date_str)
+    if not selected_date:
+        return Response({"error": "Invalid date format, expected YYYY-MM-DD"}, status=400)
+
+    # Find all tasks for the given user and date
+    tasks = Productivity.objects.filter(user=user, date=selected_date)
+
+    if not tasks.exists():
+        return Response({"message": "No productivity log found for this date."}, status=404)
+
+    # Serialize the list of tasks
+    serializer = ProductivitySerializer(tasks, many=True)
+    
+    # Return the data in the format the frontend expects
+    return Response({
+        "date": selected_date.strftime("%Y-%m-%d"),
+        "tasks": serializer.data
+    })
