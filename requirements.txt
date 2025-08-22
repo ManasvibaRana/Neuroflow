@@ -14,3 +14,4 @@ react-calendar
 axios
 sonner
 bycrpt
+pip install tf-keras
