@@ -1,7 +1,18 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function Sidebar() {
+export default function Sidebar({ onSelect }) {
   const userid = sessionStorage.getItem("userid") || "User";
+  const navigate = useNavigate();
+
+  // Map button labels to component keys
+  const menuItems = [
+    { label: "Dashboard", key: "dashboard" },
+    { label: "Journal Stats", key: "journal" },
+    { label: "Productivity", key: "productivity" },
+
+    
+  ];
 
   return (
     <aside className="w-64 bg-[#838beb] text-white p-6 flex flex-col items-center rounded-r-3xl">
@@ -14,19 +25,25 @@ export default function Sidebar() {
       <p className="text-sm opacity-80 mb-4">
         {userid.toLowerCase()}@neuroflow.app
       </p>
-      <button className="bg-white text-[#838beb] px-4 py-1 rounded-full text-sm font-medium mb-4">
-        Edit Profile
-      </button>
+
+      {/* Sidebar Menu */}
       <div className="space-y-3 w-full mt-4">
-        {["Dashboard", "Journal Stats", "Reminders", "Settings"].map((item) => (
+        {menuItems.map((item) => (
           <button
-            key={item}
+            key={item.key}
+            onClick={() => onSelect(item.key)} // trigger page change
             className="w-full text-left px-4 py-2 hover:bg-[#5762E4] hover:text-white rounded-md"
           >
-            {item}
+            {item.label}
           </button>
+
         ))}
+
+          <button className="w-full text-left px-4 py-2 hover:bg-[#5762E4] hover:text-white rounded-md" onClick={() => navigate("/journal")}>Home Page </button>
+
       </div>
+
+      {/* Logout */}
       <button
         onClick={() => {
           sessionStorage.clear();

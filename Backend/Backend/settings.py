@@ -158,5 +158,5 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'noreply.neuroflow@gmail.com'
-EMAIL_HOST_PASSWORD = 'uymv smyl btkk hpsh'
+EMAIL_HOST_PASSWORD = 'your email pass'
 DEFAULT_FROM_EMAIL = 'NeuroFlow Team <noreply.neuroflow@gmail.com>'
