@@ -64,7 +64,7 @@ const CustomizedTreemapContent = (props) => {
 
 // --- Main Dashboard Component ---
 
-export default function DashboardMain() {
+export default function DashboardMain() { // No longer needs setSidebarOpen prop
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -126,7 +126,7 @@ export default function DashboardMain() {
   }));
   
   const completionRate = (data.task_stats.completed + data.task_stats.not_completed) > 0 
-    ? Math.round((data.task_stats.completed / (data.task_stats.completed + data.task_stats.not_completed)) * 100) 
+    ? Math.round((data.task_stats.completed / (data.task_stats.not_completed + data.task_stats.completed)) * 100) 
     : 0;
   
   const taskCompletionData = [
@@ -141,55 +141,51 @@ export default function DashboardMain() {
   }));
 
   return (
-    <div>
-      <h2 className="text-3xl font-bold mb-6 text-gray-800">Welcome Back!</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Chart 1: Mood vs Productivity Trend */}
-        <Card className="lg:col-span-2">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Your Weekly Progress</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" />
-              <YAxis yAxisId="left" stroke="#8884d8" label={{ value: 'Mood', angle: -90, position: 'insideLeft' }} />
-              <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" label={{ value: 'Productivity', angle: -90, position: 'insideRight' }}/>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Bar yAxisId="right" dataKey="Productivity Score" fill="#82ca9d" radius={[4, 4, 0, 0]} />
-              <Line yAxisId="left" type="monotone" dataKey="Mood Score" stroke="#8884d8" strokeWidth={3} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </Card>
+    // The header div that was here has been removed
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Chart 1: Mood vs Productivity Trend */}
+      <Card className="lg:col-span-2">
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">Your Weekly Progress</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <ComposedChart data={trendData}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="name" />
+            <YAxis yAxisId="left" stroke="#8884d8" label={{ value: 'Mood', angle: -90, position: 'insideLeft' }} />
+            <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" label={{ value: 'Productivity', angle: -90, position: 'insideRight' }}/>
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            <Bar yAxisId="right" dataKey="Productivity Score" fill="#82ca9d" radius={[4, 4, 0, 0]} />
+            <Line yAxisId="left" type="monotone" dataKey="Mood Score" stroke="#8884d8" strokeWidth={3} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </Card>
 
-        {/* Chart 2: Emotion Distribution */}
-        <Card>
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Weekly Emotion Distribution</h3>
+      {/* Chart 2: Emotion Distribution */}
+      <Card>
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">Weekly Emotion Distribution</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <PieChart>
+            <Pie data={emotionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={renderCustomizedPieLabel}>
+              {emotionData.map(entry => <Cell key={entry.name} fill={entry.fill} />)}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+      </Card>
+
+      {/* Chart 3: Task Completion */}
+      <Card>
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Weekly Task Completion</h3>
           <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={emotionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} labelLine={false} label={renderCustomizedPieLabel}>
-                {emotionData.map(entry => <Cell key={entry.name} fill={entry.fill} />)}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
+              <PieChart>
+                  <Pie data={taskCompletionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5}>
+                      {taskCompletionData.map(entry => <Cell key={entry.name} fill={entry.fill} />)}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                  <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-3xl font-bold fill-gray-700">{completionRate}%</text>
+              </PieChart>
           </ResponsiveContainer>
-        </Card>
-
-        {/* Chart 3: Task Completion */}
-        <Card>
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Weekly Task Completion</h3>
-            <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                    <Pie data={taskCompletionData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5}>
-                        {taskCompletionData.map(entry => <Cell key={entry.name} fill={entry.fill} />)}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-3xl font-bold fill-gray-700">{completionRate}%</text>
-                </PieChart>
-            </ResponsiveContainer>
-        </Card>
-
-      
-      </div>
+      </Card>
     </div>
   );
-}
+} 

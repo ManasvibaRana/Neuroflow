@@ -9,7 +9,7 @@ import PostCard from "./PostCard";
 import CommunitySidebar from "./CommunitySidebar";
 import { Heart, Smile, Cloud, Leaf, Moon, Sparkles } from "lucide-react";
 import Navbar from "/src/Navbar";
-
+import Footer from "../LandingPage/Footer";
 
 const API = axios.create({
   baseURL: "http://127.0.0.1:8000/community/",
@@ -179,7 +179,7 @@ export default function CommunityPage() {
     <>
     <Navbar/>
 
-    <div className="min-h-screen bg-gradient-to-br from-[#f3f4ff] to-[#e7eaf7] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#f3f4ff] to-[#e7eaf7] py-8 px-4 sm:px-6 lg:px-0">
 
       <div className="max-w-6xl mx-auto space-y-8">
         <CommunityHeader />
@@ -218,6 +218,7 @@ export default function CommunityPage() {
         </div>
       </div>
     </div>
+    <Footer/>
     </>
   );
 }

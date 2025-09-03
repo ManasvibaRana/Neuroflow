@@ -37,6 +37,7 @@ const PrivateRoute = () => {
 export function App() {
   return (
     <BrowserRouter>
+    {/* <Navbar/> */}
       <div className="floating-background">
         <div className="dots"></div>
         <div className="dots"></div>

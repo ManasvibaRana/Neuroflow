@@ -8,6 +8,9 @@ import {
 import { toast } from "sonner";
 import useSound from "use-sound";
 import useChimes from "../usechimes";
+import Navbar from "../Navbar";
+import Footer from "../LandingPage/Footer";
+import { ArrowLeft } from "lucide-react"; // <-- Import the icon
 
 const quadrants = [
   { id: "1", title: "DO THIS", color: "bg-blue-100" },
@@ -74,22 +77,21 @@ const PendingTasks = () => {
   };
 
   const calculateScore = (ideal, took) => {
-  const [idealH, idealM] = ideal.split(":").map(Number);
-  const [tookH, tookM] = took.split(":").map(Number);
-  const idealMins = idealH * 60 + idealM;
-  const tookMins = tookH * 60 + tookM;
-  if (idealMins === 0) return 0;
-  let ratio = tookMins / idealMins;
-  let score = 0;
-  if (ratio <= 1) {
-    score = 100 - ratio * 50; 
-  } else {
-    score = 100 - ratio * 50;
-    if (score < 0) score = 0;
-  }
-  return Math.round(score);
-};
-
+    const [idealH, idealM] = ideal.split(":").map(Number);
+    const [tookH, tookM] = took.split(":").map(Number);
+    const idealMins = idealH * 60 + idealM;
+    const tookMins = tookH * 60 + tookM;
+    if (idealMins === 0) return 0;
+    let ratio = tookMins / idealMins;
+    let score = 0;
+    if (ratio <= 1) {
+      score = 100 - ratio * 50; 
+    } else {
+      score = 100 - ratio * 50;
+      if (score < 0) score = 0;
+    }
+    return Math.round(score);
+  };
 
   const formatDuration = (iso) => {
     if (!iso) return "00:00";
@@ -108,199 +110,196 @@ const PendingTasks = () => {
   };
 
   const updateTaskStatus = async (taskId, tookDuration, idealTime, score) => {
-  const payload = { 
-    status: true, 
-    taken_time: tookDuration,
-    score: score
-  };
-  try {
-    await fetch(`http://127.0.0.1:8000/productivity/${taskId}/`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    return payload; // so caller can use payload.score!
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-
- const confirmTookTime = async () => {
-  const { h, m } = tookTime;
-  if ((!h || !m) || (h <= 0 && m <= 0)) {
-    toast.error("Please enter time.");
-    errorChimeRef.current?.play();
-    return;
-  }
-
-  const { id, index } = currentToggledTask;
-
-  const tookDuration = `PT${parseInt(h)}H${parseInt(m)}M`;
-  const tookForScore = `${h}:${m}`; // "HH:MM"
-  const idealTime = tasks[id][index].time;
-
-  const score = calculateScore(idealTime, tookForScore);
-
-  // ✅ Mark as done in DB
-  await updateTaskStatus(tasks[id][index].id, tookDuration, idealTime, score);
-
-  // ✅ Mark as done visually
-  const updated = [...tasks[id]];
-  updated[index].completed = true;
-  updated[index].score = score;
-
-  setTasks({ ...tasks, [id]: updated });
-
-  // ✅ Wait 3 sec → then remove
-  setTimeout(() => {
-    const removed = [...updated];
-    removed.splice(index, 1);
-    const newTasks = { ...tasks, [id]: removed };
-    setTasks(newTasks);
-
-    const totalLeft = Object.values(newTasks).flat().length;
-    if (totalLeft === 0) {
-      navigate("/productivity");
+    const payload = { 
+      status: true, 
+      taken_time: tookDuration,
+      score: score
+    };
+    try {
+      await fetch(`http://127.0.0.1:8000/productivity/${taskId}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return payload;
+    } catch (err) {
+      console.error(err);
     }
-  }, 3000);
+  };
 
-  setShowTookModal(false);
-  setTookTime({ h: "", m: "0" });
-};
+  const confirmTookTime = async () => {
+    const { h, m } = tookTime;
+    if ((!h || !m) || (h <= 0 && m <= 0)) {
+      toast.error("Please enter time.");
+      errorChimeRef.current?.play();
+      return;
+    }
 
-const onDragEnd = (result) => {
-  const { source, destination } = result;
-  if (!destination) return;
+    const { id, index } = currentToggledTask;
+    const tookDuration = `PT${parseInt(h)}H${parseInt(m)}M`;
+    const tookForScore = `${h}:${m}`;
+    const idealTime = tasks[id][index].time;
+    const score = calculateScore(idealTime, tookForScore);
 
-  const srcId = source.droppableId;
-  const destId = destination.droppableId;
+    await updateTaskStatus(tasks[id][index].id, tookDuration, idealTime, score);
 
-  const sourceTasks = [...tasks[srcId]];
-  const [removed] = sourceTasks.splice(source.index, 1);
+    const updated = [...tasks[id]];
+    updated[index].completed = true;
+    updated[index].score = score;
+    setTasks({ ...tasks, [id]: updated });
 
-  if (srcId === destId) {
-    sourceTasks.splice(destination.index, 0, removed);
-    setTasks({ ...tasks, [srcId]: sourceTasks });
-  } else {
-    const destTasks = [...tasks[destId]];
-    destTasks.splice(destination.index, 0, removed);
-    setTasks({
-      ...tasks,
-      [srcId]: sourceTasks,
-      [destId]: destTasks,
-    });
-  }
-};
+    setTimeout(() => {
+      const removed = [...updated];
+      removed.splice(index, 1);
+      const newTasks = { ...tasks, [id]: removed };
+      setTasks(newTasks);
+
+      const totalLeft = Object.values(newTasks).flat().length;
+      if (totalLeft === 0) {
+        navigate("/productivity");
+      }
+    }, 3000);
+
+    setShowTookModal(false);
+    setTookTime({ h: "", m: "0" });
+  };
+
+  const onDragEnd = (result) => {
+    const { source, destination } = result;
+    if (!destination) return;
+
+    const srcId = source.droppableId;
+    const destId = destination.droppableId;
+    const sourceTasks = [...tasks[srcId]];
+    const [removed] = sourceTasks.splice(source.index, 1);
+
+    if (srcId === destId) {
+      sourceTasks.splice(destination.index, 0, removed);
+      setTasks({ ...tasks, [srcId]: sourceTasks });
+    } else {
+      const destTasks = [...tasks[destId]];
+      destTasks.splice(destination.index, 0, removed);
+      setTasks({ ...tasks, [srcId]: sourceTasks, [destId]: destTasks });
+    }
+  };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Pending Tasks</h2>
-     
-
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4">
-          {quadrants.map((q) => (
-            <Droppable droppableId={q.id} key={q.id}>
-              {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={`p-4 border ${q.color} flex flex-col h-[200px] rounded-lg`}
-                >
-                  <h2 className="text-xl font-bold mb-2">{q.title}</h2>
-                  <div className="overflow-y-auto pr-1 flex-1 custom-scrollbar">
-                    <ul className="flex flex-col gap-1">
-                      {tasks[q.id].map((task, index) => (
-                        <Draggable
-                          key={`${q.id}-${index}`}
-                          draggableId={`${q.id}-${index}`}
-                          index={index}
-                        >
-                          {(provided) => (
-                            <li
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className="relative flex items-center bg-white p-2 rounded shadow-sm text-sm"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={task.completed}
-                                onChange={() =>
-                                  !task.completed && toggleTask(q.id, index)
-                                }
-                              />
-                              <span
-                                className={`ml-2 ${
-                                  task.completed ? "line-through text-gray-500" : ""
-                                }`}
+    <>
+      <Navbar/>
+      <div className="p-4 bg-white">
+        {/* --- Back Button and Title --- */}
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={() => navigate("/productivity")}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label="Go back to productivity"
+          >
+            <ArrowLeft size={24} className="text-gray-600" />
+          </button>
+          <h2 className="text-xl font-bold">Pending Tasks</h2>
+        </div>
+        
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4">
+            {quadrants.map((q) => (
+              <Droppable droppableId={q.id} key={q.id}>
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className={`p-4 border ${q.color} flex flex-col h-[200px] rounded-lg`}
+                  >
+                    <h2 className="text-xl font-bold mb-2">{q.title}</h2>
+                    <div className="overflow-y-auto pr-1 flex-1 custom-scrollbar">
+                      <ul className="flex flex-col gap-1">
+                        {tasks[q.id].map((task, index) => (
+                          <Draggable
+                            key={`${q.id}-${index}`}
+                            draggableId={`${q.id}-${index}`}
+                            index={index}
+                          >
+                            {(provided) => (
+                              <li
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className="relative flex items-center bg-white p-2 rounded shadow-sm text-sm"
                               >
-                                {task.text}
-                              </span>
-                              <span className="text-xs text-gray-500 ml-2">
-                                ({task.date})
-                              </span>
-                              <span className="text-xs text-gray-600 ml-2">
-                                ⏰ {task.time}
-                              </span>
-                              {task.completed && (
+                                <input
+                                  type="checkbox"
+                                  checked={task.completed}
+                                  onChange={() =>
+                                    !task.completed && toggleTask(q.id, index)
+                                  }
+                                />
+                                <span className={`ml-2 ${task.completed ? "line-through text-gray-500" : ""}`}>
+                                  {task.text}
+                                </span>
+                                <span className="text-xs text-gray-500 ml-2">
+                                  ({task.date})
+                                </span>
+                                <span className="text-xs text-gray-600 ml-2">
+                                  ⏰ {task.time}
+                                </span>
+                                {task.completed && (
                                   <span className="text-xs text-green-700 ml-2">
                                     ✅ Score: {task.score}%
                                   </span>
                                 )}
-                          </li>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </ul>
+                              </li>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </ul>
+                    </div>
                   </div>
-                </div>
-              )}
-            </Droppable>
-          ))}
-        </div>
-      </DragDropContext>
+                )}
+              </Droppable>
+            ))}
+          </div>
+        </DragDropContext>
 
-      {showTookModal && (
-        <div className="fixed inset-0 flex justify-center items-center z-50">
-          <div className="bg-white p-4 rounded shadow-md">
-            <h3 className="text-lg font-semibold mb-2">How long did it take?</h3>
-            <div className="flex gap-2 items-center mb-4">
-              {["h", "m"].map((unit) => (
-                <input
-                  key={unit}
-                  type="number"
-                  placeholder={unit.toUpperCase()}
-                  min="0"
-                  max={unit === "h" ? "23" : "59"}
-                  value={tookTime[unit]}
-                  onChange={(e) =>
-                    setTookTime({ ...tookTime, [unit]: e.target.value })
-                  }
-                  className="w-12 border rounded px-1"
-                />
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowTookModal(false)}
-                className="px-4 py-1 bg-gray-300 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmTookTime}
-                className="px-4 py-1 bg-blue-600 text-white rounded"
-              >
-                Confirm
-              </button>
+        {showTookModal && (
+          <div className="fixed inset-0 flex justify-center items-center z-50 bg-black/20">
+            <div className="bg-white p-4 rounded shadow-md w-72">
+              <h3 className="text-lg font-semibold mb-2">How long did it take?</h3>
+              <div className="flex gap-2 items-center mb-4">
+                {["h", "m"].map((unit) => (
+                  <input
+                    key={unit}
+                    type="number"
+                    placeholder={unit.toUpperCase()}
+                    min="0"
+                    max={unit === "h" ? "23" : "59"}
+                    value={tookTime[unit]}
+                    onChange={(e) =>
+                      setTookTime({ ...tookTime, [unit]: e.target.value })
+                    }
+                    className="w-full border rounded px-2 py-1"
+                  />
+                ))}
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowTookModal(false)}
+                  className="px-4 py-1 bg-gray-300 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmTookTime}
+                  className="px-4 py-1 bg-blue-600 text-white rounded"
+                >
+                  Confirm
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+      <Footer/>
+    </>
   );
 };
 

@@ -2,7 +2,7 @@
 import EisenhowerMatrix from "./EisenhowerMatrix";
 import Navbar from "/src/Navbar";
 import ChatButton from '../Chat/ChatButton';
-
+import Footer from "../LandingPage/Footer";
 
 function Productivity() {
   return (
@@ -10,6 +10,7 @@ function Productivity() {
       <Navbar />
       <EisenhowerMatrix />
       <ChatButton />
+      <Footer/>
     </>
   );
 }

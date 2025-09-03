@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import ChatButton from '../Chat/ChatButton';
 import { toast } from "sonner";
 import useSound from "use-sound";
+import F from "../LandingPage/Footer"
 
 const emotionEmojis = [
   { emotion: "Joy", emoji: "😊" },
@@ -688,7 +689,7 @@ export default function JournalForm() {
           )}
           <ChatButton/>
       </Main>
-    
+      <F/>
     </ThemeProvider>
   );
 }

@@ -5,6 +5,8 @@ import { FiStar, FiPlusCircle,FiAlertTriangle  } from 'react-icons/fi';
 import MainNavbar from '../Navbar.jsx'; 
 import useChimes from '../usechimes.js'; 
 import { toast } from "sonner"; 
+import Footer from "../LandingPage/Footer";
+import ChatButton from '../Chat/ChatButton.jsx';
 
 // --- MOTIVATIONAL QUOTES ---
 const journeyQuotes = [
@@ -625,7 +627,7 @@ function HabitSetup({ onStart, allHabits }) {
 
   return (
     <>
-      <div className="relative flex items-center justify-center min-h-screen p-4">
+      <div className="relative flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-purple-100 to-pink-100">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -750,6 +752,8 @@ function HabitSetup({ onStart, allHabits }) {
             />
         )}
       </AnimatePresence>
+      <Footer/>
+      <ChatButton/> 
     </>
   );
 }

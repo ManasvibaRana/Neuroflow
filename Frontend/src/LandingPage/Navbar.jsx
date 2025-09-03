@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-scroll";
+// import logo from "./Images/Logo-brain-1.png"
 
 function Navbar() {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ function Navbar() {
           scrolled ? "text-gray-700" : "text-white"
         }`}
       >
+         {/* <img src={logo} alt="NeuroFlow Logo" className="h-9 w-auto" /> */}
         NeuroFlow
       </span>
 
@@ -51,7 +53,7 @@ function Navbar() {
       {/* Desktop Menu */}
       <div className="space-x-6 hidden md:flex items-center">
 
-        {["Home", "About", "Review", "Features", "Contact"].map((item) => (
+        {["Home", "About", "Review", "Contact"].map((item) => (
           <Link
             key={item}
             to={item}
@@ -75,7 +77,7 @@ function Navbar() {
       {/* Mobile Menu Dropdown */}
       {isOpen && (
         <div className="absolute top-16 left-0 w-full bg-white shadow-md flex flex-col items-center space-y-4 py-4 md:hidden z-50">
-          {["Home", "About", "Review", "Features", "Contact"].map((item) => (
+          {["Home", "About", "Review", "Contact"].map((item) => (
             <Link
               key={item}
               to={item}

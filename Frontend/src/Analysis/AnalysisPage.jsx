@@ -8,6 +8,8 @@ import {
 import MainNavbar from '.././Navbar.jsx'; 
 import { toast } from "sonner"; 
 import useChimes from "../usechimes";
+import ChatButton from '../Chat/ChatButton';
+import Footer from "../LandingPage/Footer";
 
 // --- Mock React Router DOM ---
 const useNavigate = () => {
@@ -101,7 +103,7 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
   if (!loading && data && !hasEnoughData) {
     errorChimeRef.current?.play()
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f9f9fc] to-[#e6e6fa]">
+      <div className="min-h-screen bg-gradient-to-br from-[#a1a1c9] to-[#e6e6fa]">
         <MainNavbar />
         <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)] text-center p-6">
           <h1 className="text-3xl font-bold text-[#796fc1] mb-4">📉 Insufficient Data</h1>
@@ -110,6 +112,7 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
           </p>
           <p className="text-gray-500">Start logging your mood and productivity daily to enable this feature.</p>
         </div>
+        <Footer/>
       </div>
     );
   }
@@ -122,6 +125,7 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
           <div className="animate-spin rounded-full h-20 w-20 border-b-4 border-[#796fc1] border-t-4 border-[#a78bfa] mb-6"></div>
           <div className="text-[#796fc1] text-lg font-semibold">Loading your analytics...</div>
         </div>
+        <Footer/>
       </div>
     );
   }
@@ -137,6 +141,7 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
             <p className="text-[#796fc1]">{error || "Could not retrieve data."}</p>
           </div>
         </div>
+        <Footer/>
       </div>
     );
   }
@@ -432,7 +437,7 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
         </Card>
       </div>
     ),
-    "AI Insights": (
+    "Insights": (
       <Card>
         <h2 className="text-2xl font-semibold text-gray-700 mb-6">AI-Powered Personal Insights</h2>
         <div className="space-y-4">
@@ -440,7 +445,7 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
             <div key={index} className="p-4 rounded-lg bg-purple-50 border border-purple-200">
               <p className="text-purple-800 leading-relaxed">{insight}</p>
             </div>
-          )) : <p className="text-gray-500">Not enough data for AI insights yet. Keep tracking!</p>}
+          )) : <p className="text-gray-500">Not enough data for insights yet. Keep tracking!</p>}
         </div>
       </Card>
     ),
@@ -454,7 +459,7 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
   const bestProductivityDay = prodArr.indexOf(maxProd) !== -1 ? labels[prodArr.indexOf(maxProd)] : "N/A";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f9f9fc] to-[#e6e6fa]">
+    <div className="min-h-screen bg-white">
       <style>{`
         @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         .animate-borderFlow { background: linear-gradient(120deg, #a78bfa, #c084fc, #8b5cf6); background-size: 300% 300%; animation: gradientMove 6s ease-in-out infinite; filter: brightness(1.1); }
@@ -496,6 +501,8 @@ const hasEnoughData = data && data.correlation_details?.sample_size >= 5;
         </div>
         <Tabs tabs={tabContent} />
       </main>
+        <Footer/>
+        <ChatButton/>
     </div>
   );
 };
