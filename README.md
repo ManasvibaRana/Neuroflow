@@ -1,4 +1,6 @@
 ### Neuroflow
+
+
 **A fast, focused wellness companion** that helps you build habits, journal with images, stay productive with timers and matrices, shows the analysis, and engage with a supportive community.**
 ---
 [![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
@@ -7,15 +9,6 @@
 [![Preact](https://img.shields.io/badge/Preact-10-673AB8?style=for-the-badge&logo=preact&logoColor=white)](https://preactjs.com/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 ---
-
-### Table of contents
-- **What it does**
-- **Quick start**
-- **Core modules**
-- **Tech stack**
-- **Structure**
-- **Team**
-- **Notes**
 
 ### What it does 
 - **Journal faster**: create entries, attach images; browse history with calendar.
