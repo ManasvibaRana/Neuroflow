@@ -1,5 +1,6 @@
 ### Neuroflow
-**A fast, focused wellness companion** that helps you build habits, journal with images, stay productive with timers and matrices, shows the analysis, and engage with a supportive community.
+**A fast, focused wellness companion** that helps you build habits, journal with images, stay productive with timers and matrices, shows the analysis, and engage with a supportive community.**
+---
 [![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![DRF](https://img.shields.io/badge/Django%20REST-Framework-EF4444?style=for-the-badge&logo=django&logoColor=white)](https://www.django-rest-framework.org/)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=FFD62E)](https://vitejs.dev/)
