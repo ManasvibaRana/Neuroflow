@@ -56,7 +56,7 @@ Backend: `http://127.0.0.1:8000` • Frontend: typically `http://localhost:5173`
 - To change ports: `python manage.py runserver 8001` or `vite --port 5174`.
 
 ### Team 
-| Member | GitHub | Role |
+| Name | GitHub | Role |
 |---|---|---|
 | Rana Manasviba | [@Manasvi](https://github.com/ManasvibaRana) |  Backend |
 | Bhavsar Meet | [@Meet](https://github.com/meetBhavsar2701) |  Backend |
