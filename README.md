@@ -55,13 +55,13 @@ Backend: `http://127.0.0.1:8000` • Frontend: typically `http://localhost:5173`
 - Uses SQLite by default; media stored in `Backend/media/`.
 - To change ports: `python manage.py runserver 8001` or `vite --port 5174`.
 
-### Team (4 members)
+### Team 
 | Member | GitHub | Role |
 |---|---|---|
-| Rana Manasviba | [@Manasvi](https://github.com/ManasvibaRana) | Role Backend |
-| Bhavsar Meet | [@Meet](https://github.com/meetBhavsar2701) | Role Backend |
-| Panchal Sakshi | [@Sakshi](https://github.com/Sakshii1410) | Role Frontend|
-| Bhalodia Chand |  | Role Frontend|
+| Rana Manasviba | [@Manasvi](https://github.com/ManasvibaRana) |  Backend |
+| Bhavsar Meet | [@Meet](https://github.com/meetBhavsar2701) |  Backend |
+| Panchal Sakshi | [@Sakshi](https://github.com/Sakshii1410) |  Frontend|
+| Bhalodia Chand |  |  Frontend|
 
 ---
 
