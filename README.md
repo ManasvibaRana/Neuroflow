@@ -1,4 +1,4 @@
-### Neuroflow
+## Neuroflow
 
 
 **A fast, focused wellness companion** that helps you build habits, journal with images, stay productive with timers and matrices, shows the analysis, and engage with a supportive community.**
