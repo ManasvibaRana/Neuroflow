@@ -1,9 +1,8 @@
-![Focus on habits](https://img.shields.io/badge/Focus-Habits%20%7C%20Journaling%20%7C%20Community-8A2BE2)
-[![Django 4.2](https://img.shields.io/badge/Django-4.2-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
-[![DRF](https://img.shields.io/badge/REST-DRF-EF4444)](https://www.django-rest-framework.org/)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Preact](https://img.shields.io/badge/Preact-10-673AB8?logo=preact&logoColor=white)](https://preactjs.com/)
-[![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![Django REST Framework](https://img.shields.io/badge/REST-Framework-A30F0F?style=for-the-badge&logo=django-rest-framework&logoColor=white)](https://www.django-rest-framework.org/)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Preact](https://img.shields.io/badge/Preact-10-673AB8?style=for-the-badge&logo=preact&logoColor=white)](https://preactjs.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
 ### Neuroflow
 **A fast, focused wellness companion** that helps you build habits, journal with images, stay productive with timers and matrices, shows the analysis, and engage with a supportive community.
@@ -26,7 +25,7 @@
 - **Community support**: share posts, like, and comment.
 - **All-in-one**: songs for focus, simple analysis endpoints ready for future insights.
 
-### Tech stack (concise)
+### Tech stack 
 - Backend: Django 4.2, DRF, CORS, Pillow, Whitenoise
 - Frontend: Vite, Preact, Tailwind, Router, Chart.js/Recharts, Lottie
 
@@ -67,11 +66,11 @@ Backend: `http://127.0.0.1:8000` • Frontend: typically `http://localhost:5173`
 ### Team (4 members)
 | Member | GitHub | Role |
 |---|---|---|
-| Rana Manasviba | [@github-id-1](https://github.com/ManasvibaRana) | Role Backend |
-| Bhavsar Meet | [@github-id-2](https://github.com/meetBhavsar2701) | Role Backend |
-| Panchal Sakshi | [@github-id-3](https://github.com/github-id-3) | Role Frontend|
-| Bhalodia Chand | [@github-id-4](https://github.com/github-id-4) | Role Frontend|
+| Rana Manasviba | [@Manasvi](https://github.com/ManasvibaRana) | Role Backend |
+| Bhavsar Meet | [@Meet](https://github.com/meetBhavsar2701) | Role Backend |
+| Panchal Sakshi | [@Sakshi](https://github.com/Sakshii1410) | Role Frontend|
+| Bhalodia Chand | [ | Role Frontend|
 
 ---
 
-Built with ❤️ by team .
+Built with ❤️ by team.
