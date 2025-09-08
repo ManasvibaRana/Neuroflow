@@ -1,12 +1,10 @@
-[![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
-[![Django REST Framework](https://img.shields.io/badge/REST-Framework-A30F0F?style=for-the-badge&logo=django-rest-framework&logoColor=white)](https://www.django-rest-framework.org/)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Preact](https://img.shields.io/badge/Preact-10-673AB8?style=for-the-badge&logo=preact&logoColor=white)](https://preactjs.com/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-
 ### Neuroflow
 **A fast, focused wellness companion** that helps you build habits, journal with images, stay productive with timers and matrices, shows the analysis, and engage with a supportive community.
-
+[![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![DRF](https://img.shields.io/badge/Django%20REST-Framework-EF4444?style=for-the-badge&logo=django&logoColor=white)](https://www.django-rest-framework.org/)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=FFD62E)](https://vitejs.dev/)
+[![Preact](https://img.shields.io/badge/Preact-10-673AB8?style=for-the-badge&logo=preact&logoColor=white)](https://preactjs.com/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 ---
 
 ### Table of contents
@@ -69,7 +67,7 @@ Backend: `http://127.0.0.1:8000` • Frontend: typically `http://localhost:5173`
 | Rana Manasviba | [@Manasvi](https://github.com/ManasvibaRana) | Role Backend |
 | Bhavsar Meet | [@Meet](https://github.com/meetBhavsar2701) | Role Backend |
 | Panchal Sakshi | [@Sakshi](https://github.com/Sakshii1410) | Role Frontend|
-| Bhalodia Chand | [ | Role Frontend|
+| Bhalodia Chand |  | Role Frontend|
 
 ---
 
