@@ -977,7 +977,7 @@ useLayoutEffect(() => {
           
               {habit.viewMode && (
                 <div className="mt-4 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg inline-block">
-                  Viewing past journey — This quest is complete.
+                  Viewing past journey - This quest is complete.
                 </div>
               )}
 
@@ -1136,7 +1136,7 @@ useLayoutEffect(() => {
                     <ModalBackdrop onClick={() => setActiveModal(null)}>
                         <ModalContent className="text-center">
                             <h2 className="text-2xl font-bold text-green-600">+1 Life!</h2>
-                            <p className="text-slate-600">Milestone reached — you’ve earned a heart ❤️</p>
+                            <p className="text-slate-600">Milestone reached - you’ve earned a heart ❤️</p>
                         </ModalContent>
                     </ModalBackdrop>
                 )}
